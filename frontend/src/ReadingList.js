@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Book, Trash2, Loader2, AlertCircle, CheckCircle, X, Star } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 
 function ReadingList({ isOpen, onClose }) {
   const [readingList, setReadingList] = useState([]);
@@ -88,6 +89,7 @@ function ReadingList({ isOpen, onClose }) {
   };
 
   const handleFileUpload = async (e) => {
+    await Haptics.impact({ style: ImpactStyle.Medium });
     const file = e.target.files[0];
     if (!file) return;
 
@@ -115,10 +117,12 @@ function ReadingList({ isOpen, onClose }) {
       const data = await response.json();
 
       if (!response.ok) {
+        await Haptics.notification({ type: NotificationType.Error });
         throw new Error(data.error || 'Failed to import');
       }
 
       setSuccess(`Successfully imported ${data.imported} books!`);
+      await Haptics.notification({ type: NotificationType.Success });
       await loadReadingList();
       setActiveFilter('all');
     } catch (err) {
@@ -130,6 +134,7 @@ function ReadingList({ isOpen, onClose }) {
   };
 
   const handleClearList = async () => {
+    await Haptics.impact({ style: ImpactStyle.Heavy });
     if (!window.confirm('Are you sure you want to clear your entire reading list? This cannot be undone.')) {
       return;
     }
@@ -149,10 +154,12 @@ function ReadingList({ isOpen, onClose }) {
       const data = await response.json();
 
       if (!response.ok) {
+        await Haptics.notification({ type: NotificationType.Error });
         throw new Error(data.error || 'Failed to clear list');
       }
 
       setSuccess('Reading list cleared successfully');
+      await Haptics.notification({ type: NotificationType.Success });
       setReadingList([]);
       setFilteredBooks([]);
       setStats(null);
@@ -165,7 +172,6 @@ function ReadingList({ isOpen, onClose }) {
     }
   };
 
-  if (!isOpen) return null;
 
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto pt-15 pb-8 px-4">
@@ -279,7 +285,10 @@ function ReadingList({ isOpen, onClose }) {
             {stats && (
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                   <button
-                      onClick={() => handleFilterClick('all')}
+                      onClick={async() => {
+                        await Haptics.impact({ style: ImpactStyle.Light });
+                        handleFilterClick('all')
+                      }}
                       className={`rounded-lg p-4 text-center transition-all hover:shadow-md ${
                           activeFilter === 'all' ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-gray-50'
                       }`}
@@ -289,7 +298,10 @@ function ReadingList({ isOpen, onClose }) {
                   </button>
 
                   <button
-                      onClick={() => handleFilterClick('read')}
+                      onClick={async() => {
+                        await Haptics.impact({ style: ImpactStyle.Light });
+                        handleFilterClick('read')
+                      }}
                       className={`rounded-lg p-4 text-center transition-all hover:shadow-md ${
                           activeFilter === 'read' ? 'ring-2 ring-green-500 bg-green-100' : 'bg-green-50'
                       }`}
@@ -299,7 +311,10 @@ function ReadingList({ isOpen, onClose }) {
                   </button>
 
                   <button
-                      onClick={() => handleFilterClick('currently-reading')}
+                      onClick={async() => {
+                        await Haptics.impact({ style: ImpactStyle.Light });
+                        handleFilterClick('currently-reading')
+                      }}
                       className={`rounded-lg p-4 text-center transition-all hover:shadow-md ${
                           activeFilter === 'currently-reading' ? 'ring-2 ring-blue-500 bg-blue-100' : 'bg-blue-50'
                       }`}
@@ -309,7 +324,10 @@ function ReadingList({ isOpen, onClose }) {
                   </button>
 
                   <button
-                      onClick={() => handleFilterClick('to-read')}
+                      onClick={async() => {
+                        await Haptics.impact({ style: ImpactStyle.Light });
+                        handleFilterClick('to-read')
+                      }}
                       className={`rounded-lg p-4 text-center transition-all hover:shadow-md ${
                           activeFilter === 'to-read' ? 'ring-2 ring-amber-500 bg-amber-100' : 'bg-amber-50'
                       }`}

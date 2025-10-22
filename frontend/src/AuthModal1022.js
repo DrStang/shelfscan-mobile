@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
+import { supabase } from './supabaseClient'; // Import directly for testing
 
 export default function AuthModal({ isOpen, onClose }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -9,38 +11,99 @@ export default function AuthModal({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');
 
   const { signIn, signUp } = useAuth();
 
   if (!isOpen) return null;
 
+  // Add a test button to check Supabase connection
+  const testConnection = async () => {
+    console.log('🧪 Testing Supabase connection...');
+    setDebugInfo('Testing connection...');
+
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      console.log('Session check:', { data, error });
+      setDebugInfo(`Session: ${JSON.stringify(data, null, 2)}`);
+    } catch (err) {
+      console.error('Connection test failed:', err);
+      setDebugInfo(`Error: ${err.message}`);
+    }
+  };
+
   const handleSubmit = async (e) => {
+    await Haptics.impact({ style: ImpactStyle.Medium });
     e.preventDefault();
     setError('');
     setSuccess('');
+    setDebugInfo('');
     setLoading(true);
+
+    console.log('=== AUTH ATTEMPT START ===');
+    console.log('Email:', email);
+    console.log('Is SignUp:', isSignUp);
 
     try {
       if (isSignUp) {
-        const { error } = await signUp(email, password);
-        if (error) throw error;
+        console.log('📝 Calling signUp...');
+        const result = await signUp(email, password);
+        console.log('SignUp result:', result);
+
+        if (result.error) {
+          console.error('SignUp error:', result.error);
+          throw result.error;
+        }
+
+        console.log('✅ SignUp successful:', result.data);
+        await Haptics.notification({ type: NotificationType.Success });
         setSuccess('Account created! Check your email to verify.');
+        setDebugInfo(`Success: ${JSON.stringify(result.data?.user?.email)}`);
       } else {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
+        console.log('🔓 Calling signIn...');
+        const result = await signIn(email, password);
+        console.log('SignIn result:', result);
+
+        if (result.error) {
+          console.error('SignIn error:', result.error);
+          throw result.error;
+        }
+
+        console.log('✅ SignIn successful:', result.data);
+        await Haptics.notification({ type: NotificationType.Success });
         setSuccess('Signed in successfully!');
-        setTimeout(() => onClose(), 1000);
+        setDebugInfo(`Success: ${JSON.stringify(result.data?.user?.email)}`);
+
+        // Check if user is actually set
+        setTimeout(() => {
+          console.log('Checking session after 1s...');
+          supabase.auth.getSession().then(({ data }) => {
+            console.log('Session 1s later:', data);
+          });
+        }, 1000);
+
+        setTimeout(() => onClose(), 1500);
       }
     } catch (err) {
+      console.error('❌ Auth error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        status: err.status,
+        name: err.name
+      });
+
+      await Haptics.notification({ type: NotificationType.Error });
       setError(err.message || 'An error occurred');
+      setDebugInfo(`Error: ${err.message} (${err.status || 'no status'})`);
     } finally {
       setLoading(false);
+      console.log('=== AUTH ATTEMPT END ===');
     }
   };
 
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 relative">
+        <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 relative max-h-[90vh] overflow-y-auto">
           <button
               onClick={onClose}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -106,6 +169,13 @@ export default function AuthModal({ isOpen, onClose }) {
                 </div>
             )}
 
+            {/* Debug info */}
+            {debugInfo && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-xs font-mono overflow-auto max-h-32">
+                  {debugInfo}
+                </div>
+            )}
+
             <button
                 type="submit"
                 disabled={loading}
@@ -120,14 +190,25 @@ export default function AuthModal({ isOpen, onClose }) {
                   isSignUp ? 'Create Account' : 'Sign In'
               )}
             </button>
+
+            {/* Test connection button */}
+            <button
+                type="button"
+                onClick={testConnection}
+                className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg text-sm"
+            >
+              🧪 Test Connection
+            </button>
           </form>
 
           <div className="mt-6 text-center">
             <button
-                onClick={() => {
+                onClick={async() => {
+                  await Haptics.impact({ style: ImpactStyle.Light });
                   setIsSignUp(!isSignUp);
                   setError('');
                   setSuccess('');
+                  setDebugInfo('');
                 }}
                 className="text-indigo-600 hover:text-indigo-700 font-medium"
             >
