@@ -10,7 +10,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+/* Android scrolling fix */
+* {
+  -webkit-overflow-scrolling: touch;
+}
 
+body, html {
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
   monospace;

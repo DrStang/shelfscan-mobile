@@ -37,6 +37,9 @@ export const AuthProvider = ({ children }) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: 'https://shelfscan.xyz/auth-callback.html'
+      }
     });
     return { data, error };
   };
@@ -44,6 +47,13 @@ export const AuthProvider = ({ children }) => {
   const signIn = async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
+      password,
+    });
+    return { data, error };
+  };
+
+  const changePassword = async (email, password) => {
+    const { data, error} = await supabase.auth.updateUser({
       password,
     });
     return { data, error };
@@ -61,6 +71,7 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signIn,
     signOut,
+    changePassword,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

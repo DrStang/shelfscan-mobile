@@ -15,19 +15,19 @@ import amazonImage from './amazon.png';
 import googleImage from './Google_Play_Books_icon_(2023).svg.png';
 import goodreadsImage from './Goodreads_logo_2025.png';
 import { Share as CapacitorShare } from '@capacitor/share';
+import BottomSheet from './components/BottomSheet';
 import EmptyState from "./components/EmptyState";
 import { usePullToRefresh} from "./hooks/usePullToRefresh";
 import DeepLinkHandler from "./DeepLinkHandler";
 import PwChangeModal from "./PwChangeModal";
-import WelcomeModal from "./components/WelcomeModal";
-import HelpButton from "./components/HelpButton";
 
 function App() {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [books, setBooks] = useState([]);
   const [error, setError] = useState('');
-  const [isNetworkError, setIsNetworkError] = useState(false);
+  const [rateLimitError, setRateLimitError] = useState(false);
+  const [backendStatus, setBackendStatus] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showReadingList, setShowReadingList] = useState(false);
@@ -40,11 +40,28 @@ function App() {
   const [matchedCount, setMatchedCount] = useState(0);
   const [activeTab, setActiveTab] = useState('scan');
   const [showPwChangeModal, setShowPwChangeModal] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
 
   const {user, signOut, loading: authLoading} = useAuth();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
+
+  // Check backend health on mount
+  useEffect(() => {
+    const checkBackend = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/health`);
+        const data = await response.json();
+        if (data.status === 'ok') {
+          setBackendStatus('connected');
+        } else {
+          setBackendStatus('error');
+        }
+      } catch (err) {
+        setBackendStatus('disconnected');
+      }
+    };
+    checkBackend();
+  }, [API_URL]);
 
   // Load scan history when user logs in
   useEffect(() => {
@@ -72,18 +89,6 @@ function App() {
 
     setupStatusBar();
   }, []);
-
-  useEffect(() => {
-    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
-    if (!hasSeenWelcome) {
-      setShowWelcome(true);
-    }
-  }, []);
-
-  const handleCloseWelcome = () => {
-    setShowWelcome(false);
-    localStorage.setItem('hasSeenWelcome', 'true');
-  };
 
   const loadScanHistory = async () => {
     if (!user) return;
@@ -134,14 +139,12 @@ function App() {
 
   const processImageFile = (file) => {
     if (file.size > 10 * 1024 * 1024) {
-      setError('Please try a smaller image');
-      setIsNetworkError(false);
+      setError('Image size must be less than 10MB');
       return;
     }
 
     if (!file.type.startsWith('image/')) {
-      setError('Please upload a valid image');
-      setIsNetworkError(false);
+      setError('Please upload a valid image file');
       return;
     }
 
@@ -150,11 +153,10 @@ function App() {
       setImage(event.target.result);
       setBooks([]);
       setError('');
-      setIsNetworkError(false);
+      setRateLimitError(false);
     };
     reader.onerror = () => {
-      setError('Something went wrong. Please try again.');
-      setIsNetworkError(false);
+      setError('Failed to read image file');
     };
     reader.readAsDataURL(file);
   };
@@ -165,7 +167,7 @@ function App() {
 
     setLoading(true);
     setError('');
-    setIsNetworkError(false);
+    setRateLimitError(false);
     setBooks([]);
     setMatchedCount(0);
 
@@ -177,12 +179,10 @@ function App() {
         },
         body: JSON.stringify({
           image,
-          userId: user?.id
+          userId: user?.id  // NEW: Pass user ID for cross-reference
         })
       }).catch(err => {
-        // Network error - can't reach server
-        setIsNetworkError(true);
-        throw new Error('Check your network connection');
+        throw new Error(`Cannot connect to backend at ${API_URL}. Make sure the backend server is running.`);
       });
 
       let data;
@@ -192,23 +192,25 @@ function App() {
         try {
           data = await response.json();
         } catch (jsonError) {
-          throw new Error('Something went wrong. Please try again.');
+          throw new Error('Backend returned invalid JSON. Check backend logs for errors.');
         }
       } else {
-        throw new Error('Something went wrong. Please try again.');
+        const text = await response.text();
+        throw new Error(`Backend error: ${text.substring(0, 200)}`);
       }
 
       if (!response.ok) {
         if (response.status === 429) {
-          throw new Error('You\'ve scanned too many images. Please try again in a few minutes.');
+          setRateLimitError(true);
+          throw new Error('Too many requests. Please wait a few minutes and try again.');
         }
 
-        throw new Error(data.error || 'Something went wrong. Please try again.');
+        throw new Error(data.error || `Server error (${response.status})`);
       }
 
       if (data.success && data.books) {
         setBooks(data.books);
-        setMatchedCount(data.matchedInReadingList || 0);
+        setMatchedCount(data.matchedInReadingList || 0);  // NEW: Store match count
         await Haptics.notification({type: NotificationType.Success});
 
         // Auto-save scan for logged-in users
@@ -220,12 +222,12 @@ function App() {
           setError(`Found ${data.totalFound} books, but could only get ratings for ${data.totalProcessed}`);
         }
       } else {
-        throw new Error('Something went wrong. Please try again.');
+        throw new Error('Unexpected response from server');
       }
 
     } catch (err) {
       console.error('Scan error:', err);
-      setError(err.message || 'Something went wrong. Please try again.');
+      setError(err.message || 'An error occurred while scanning books');
       await Haptics.notification({type: NotificationType.Error});
     } finally {
       setLoading(false);
@@ -265,12 +267,11 @@ function App() {
       setImage(photo.dataUrl);
       setBooks([]);
       setError('');
-      setIsNetworkError(false);
+      setRateLimitError(false);
     } catch (err) {
       if (err.message !== 'User cancelled photos app') {
         console.error('Camera error:', err);
-        setError('Something went wrong. Please try again.');
-        setIsNetworkError(false);
+        setError('Failed to access camera');
       }
     } finally {
       setLoading(false);
@@ -305,7 +306,7 @@ function App() {
       <>
         <DeepLinkHandler/>
         <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col pt-safe">
-          {/*style={{ paddingTop: 'env(safe-area-inset-top)' }}>*/}
+             {/*style={{ paddingTop: 'env(safe-area-inset-top)' }}>*/}
           <div className="flex-1 overflow-hidden pb-16">
             {/* SCAN TAB */}
             {activeTab === 'scan' && (
@@ -315,7 +316,7 @@ function App() {
                        overscrollBehavior: 'contain'
                      }}>
                   <div className="max-w-6xl mx-auto p-8 pb-8 min-h-full">
-                    {/*style={{ paddingTop: 'max(5rem, env(safe-area-inset-top))' }}>*/}
+                       {/*style={{ paddingTop: 'max(5rem, env(safe-area-inset-top))' }}>*/}
                     {/* Your existing scan content - keep all of it */}
                     {/* Description text */}
                     <div className="text-center mb-6 sm:mb-8">
@@ -323,6 +324,19 @@ function App() {
                         highest-rated books.</p>
                       <p className="text-sm sm:text-base text-gray-600 px-4">Optionally register/sign-in to store your
                         scan history and to see if a scanned book is in your Goodreads reading list!</p>
+
+                      {backendStatus && (
+                          <div className="mt-3 flex items-center justify-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${
+                                backendStatus === 'connected' ? 'bg-green-500' :
+                                    backendStatus === 'disconnected' ? 'bg-red-500' : 'bg-yellow-500'
+                            }`}></div>
+                            <span className="text-sm text-gray-500">
+                        Backend: {backendStatus === 'connected' ? 'Connected' :
+                                backendStatus === 'disconnected' ? `Not reachable at ${API_URL}` : 'Error'}
+                      </span>
+                          </div>
+                      )}
 
                       {savingScan && (
                           <div className="mt-2 text-sm text-indigo-600">
@@ -441,9 +455,16 @@ function App() {
                       </div>
 
                       {error && (
-                          <div className="mt-4 p-4 border rounded-lg flex items-start gap-3 bg-red-50 border-red-200 text-red-700">
+                          <div className={`mt-4 p-4 border rounded-lg flex items-start gap-3 ${
+                              rateLimitError
+                                  ? 'bg-orange-50 border-orange-200 text-orange-700'
+                                  : 'bg-red-50 border-red-200 text-red-700'
+                          }`}>
                             <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5"/>
-                            <p>{error}</p>
+                            <div>
+                              <p className="font-semibold">{rateLimitError ? 'Rate Limit Reached' : 'Error'}</p>
+                              <p>{error}</p>
+                            </div>
                           </div>
                       )}
                     </div>
@@ -860,11 +881,6 @@ function App() {
             isOpen={showPwChangeModal}
             onClose={() => setShowPwChangeModal(false)}
         />
-        <WelcomeModal
-          isOpen={showWelcome}
-          onClose={handleCloseWelcome}
-        />
-        <HelpButton />
       </>
   );
 }

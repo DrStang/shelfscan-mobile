@@ -19,7 +19,20 @@ function TabBar({ activeTab, onTabChange }) {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-inset-bottom z-50">
+        <div
+            className="fixed left-0 right-0 bg-white border-t border-gray-200 z-50"
+            style={{
+                bottom: 0,
+                paddingBottom: 'env(safe-area-inset-bottom)',
+                minHeight: '4rem',
+                height: 'calc(2rem + env(safe-area-inset-bottom))',
+                transform: 'translate3d(0, 0, 0)',
+                WebkitTransform: 'translate3d(0, 0, 0)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                position: 'fixed' // Explicitly set position in style
+            }}
+        >
             <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
