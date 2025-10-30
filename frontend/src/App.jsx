@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Upload, Book, Star, Loader2, AlertCircle, Camera, User, LogOut, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Upload, Book, Star, Loader2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import AuthModal from './AuthModal';
 import ReadingList from './ReadingList';
@@ -21,6 +21,8 @@ import DeepLinkHandler from "./DeepLinkHandler";
 import PwChangeModal from "./PwChangeModal";
 import WelcomeModal from "./components/WelcomeModal";
 import HelpButton from "./components/HelpButton";
+import Cropper from 'react-easy-crop';
+import getCroppedImg from './cropImage';
 
 function App() {
   const [image, setImage] = useState(null);
@@ -41,6 +43,12 @@ function App() {
   const [activeTab, setActiveTab] = useState('scan');
   const [showPwChangeModal, setShowPwChangeModal] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
+  const [crop, setCrop] = useState({x:0, y:0});
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
 
   const {user, signOut, loading: authLoading} = useAuth();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -147,7 +155,8 @@ function App() {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      setImage(event.target.result);
+      setImageToCrop(event.target.result);
+      setShowCropModal(true);
       setBooks([]);
       setError('');
       setIsNetworkError(false);
@@ -157,6 +166,42 @@ function App() {
       setIsNetworkError(false);
     };
     reader.readAsDataURL(file);
+  };
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleCropConfirm = async () => {
+    try {
+      const croppedImage = await getCroppedImg(
+          imageToCrop,
+          croppedAreaPixels,
+          rotation
+      );
+      setImage(croppedImage);
+      setShowCropModal(false);
+      setImageToCrop(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+      setCroppedAreaPixels(null);
+    } catch (e) {
+      console.error('Error while croping image:', e);
+      setError('Failed to crop image');
+    }
+  };
+
+  const handleCropCancel = () => {
+    setShowCropModal(false);
+    setImageToCrop(null);
+    setCrop({ x: 0, y: 0 });
+    setRotation(0);
+    setZoom(1);
+    setCroppedAreaPixels(null);
+  };
+
+  const handleRotate = () => {
+    setRotation((prev) => (prev + 90) % 360);
   };
 
   const scanBooks = async () => {
@@ -262,7 +307,8 @@ function App() {
       });
 
       // photo.dataUrl is already in base64 format!
-      setImage(photo.dataUrl);
+      setImageToCrop(photo.dataUrl);
+      setShowCropModal(true);
       setBooks([]);
       setError('');
       setIsNetworkError(false);
@@ -391,7 +437,7 @@ function App() {
 
                               <label className="flex-1 cursor-pointer">
                                 <div
-                                    className="px-6 py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
+                                    className="px-6 py-3 bg-gray-600 text-white rounded-full font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
                                   <Upload className="w-5 h-5"/>
                                   Upload File
                                 </div>
@@ -840,6 +886,86 @@ function App() {
           </div>
         </div>
 
+        {/* Crop Modal */}
+        {showCropModal && (
+            <div className="fixed inset-0 bg-black z-50 flex flex-col">
+              {/* Crop Header */}
+              <div className="bg-gray-900 text-white px-4 py-3 pt-safe flex justify-between items-center flex-shrink-0">
+                <button
+                    onClick={handleCropCancel}
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors active:scale-95"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+                <h3 className="text-lg font-semibold">Adjust Photo</h3>
+                <button
+                    onClick={handleCropConfirm}
+                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors active:scale-95"
+                >
+                  <Check className="w-6 h-6 text-green-400" />
+                </button>
+              </div>
+
+              {/* Crop Area - Takes remaining space */}
+              <div className="flex-1 relative min-h-0 overflow-hidden">
+                <Cropper
+                    image={imageToCrop}
+                    crop={crop}
+                    zoom={zoom}
+                    rotation={rotation}
+                    aspect={undefined} // Free aspect ratio
+                    onCropChange={setCrop}
+                    onZoomChange={setZoom}
+                    onCropComplete={onCropComplete}
+                    objectFit="contain"
+                />
+              </div>
+
+              {/* Crop Controls - Fixed at bottom with safe area padding */}
+              <div className="bg-gray-900 text-white px-4 pt-4 space-y-4 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 3.5rem)' }}>
+                {/* Zoom Control */}
+                <div>
+                  <label className="block text-sm mb-2">Zoom</label>
+                  <input
+                      type="range"
+                      min={1}
+                      max={3}
+                      step={0.1}
+                      value={zoom}
+                      onChange={(e) => setZoom(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                  />
+                </div>
+
+                {/* Rotate Button */}
+                <button
+                    onClick={handleRotate}
+                    className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <RotateCw className="w-5 h-5" />
+                  Rotate 90°
+                </button>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pb-4">
+                  <button
+                      onClick={handleCropCancel}
+                      className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors active:scale-95 font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                      onClick={handleCropConfirm}
+                      className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-95 font-semibold"
+                  >
+                    Use Photo
+                  </button>
+                </div>
+              </div>
+            </div>
+        )}
+
+
         {/* Tab Bar - MUST be outside the scrolling container to stay fixed */}
         <TabBar activeTab={activeTab} onTabChange={setActiveTab}/>
 
@@ -861,8 +987,8 @@ function App() {
             onClose={() => setShowPwChangeModal(false)}
         />
         <WelcomeModal
-          isOpen={showWelcome}
-          onClose={handleCloseWelcome}
+            isOpen={showWelcome}
+            onClose={handleCloseWelcome}
         />
         <HelpButton />
       </>

@@ -26,8 +26,8 @@ const HelpButton = () => {
 
                     {/* Slide-in Panel */}
                     <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto">
-                        {/* Header */}
-                        <div className="sticky top-0 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white p-6 shadow-md">
+                        {/* Header - Sticky with safe area */}
+                        <div className="sticky top-0 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-md z-10" style={{ paddingTop: 'max(env(safe-area-inset-top), 1.5rem)', paddingBottom: '1.5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h2 className="text-2xl font-bold mb-1">Quick Start Guide</h2>
@@ -35,7 +35,7 @@ const HelpButton = () => {
                                 </div>
                                 <button
                                     onClick={() => setShowHelp(false)}
-                                    className="text-white hover:text-indigo-100 transition-colors"
+                                    className="text-white hover:text-indigo-100 transition-colors active:scale-95"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -43,7 +43,7 @@ const HelpButton = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="p-6 space-y-6">
+                        <div className="p-6 space-y-6" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.5rem)' }}>
                             {/* Quick Start */}
                             <section>
                                 <h3 className="text-xl font-bold text-gray-800 mb-3 flex items-center gap-2">
