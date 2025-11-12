@@ -27,7 +27,7 @@ const HelpButton = () => {
                     {/* Slide-in Panel */}
                     <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto">
                         {/* Header - Sticky with safe area */}
-                        <div className="sticky top-0 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-md z-10" style={{ paddingTop: 'max(env(safe-area-inset-top), 1.5rem)', paddingBottom: '1.5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
+                        <div className="sticky top-0 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-md z-10" style={{ paddingTop: 'max(env(safe-area-inset-top)', paddingBottom: '1.5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h2 className="text-2xl font-bold mb-1">Quick Start Guide</h2>
@@ -132,13 +132,13 @@ const HelpButton = () => {
                                         <ol className="ml-4 space-y-1">
                                             <li>1. Go to "My Books"</li>
                                             <li>2. Find "Import and export"</li>
-                                            <li>3. Export Library → Download CSV</li>
+                                            <li>3. Export Library → Copy CSV</li>
                                         </ol>
                                         <p className="mt-2"><strong>In Shelf Scan:</strong></p>
                                         <ol className="ml-4 space-y-1">
-                                            <li>1. Go to Profile → My Library</li>
-                                            <li>2. Import from Goodreads</li>
-                                            <li>3. Upload CSV file</li>
+                                            <li>1. Go to My Library</li>
+                                            <li>2. Paste Reading List</li>
+                                            <li>3. Paste CSV file and Import!</li>
                                         </ol>
                                     </div>
                                 </div>
@@ -151,6 +151,10 @@ const HelpButton = () => {
                                     <div>
                                         <p className="font-semibold text-gray-800">Books not recognized?</p>
                                         <p className="text-gray-600">Retake with better lighting and fewer books (5-10 max)</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-800">Book results different from the shelf?</p>
+                                        <p className="text-gray-600">Re-submit a photo (AI is not perfect!)</p>
                                     </div>
                                     <div>
                                         <p className="font-semibold text-gray-800">"Check your network connection"</p>

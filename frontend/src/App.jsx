@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Upload, Book, Star, Loader2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
+import { Upload, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import AuthModal from './AuthModal';
 import ReadingList from './ReadingList';
@@ -23,6 +23,9 @@ import WelcomeModal from "./components/WelcomeModal";
 import HelpButton from "./components/HelpButton";
 import Cropper from 'react-easy-crop';
 import getCroppedImg from './cropImage';
+import DeleteAccountModal from "./components/DeleteAccountModal";
+import SwipeableScanItem from "./components/SwipeableScanItem";
+import PrivacyModal from './PrivacyModal';
 
 function App() {
   const [image, setImage] = useState(null);
@@ -49,8 +52,11 @@ function App() {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(!Capacitor.isNativePlatform());
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
-  const {user, signOut, loading: authLoading} = useAuth();
+  const {user, session, signOut, loading: authLoading} = useAuth();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 
@@ -79,6 +85,29 @@ function App() {
     };
 
     setupStatusBar();
+  }, []);
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          // Setup StatusBar
+          await StatusBar.setStyle({style: Style.Light});
+          await StatusBar.setBackgroundColor({color: '#ffffff'});
+          await StatusBar.setOverlaysWebView({overlay: true});
+
+          // Small delay to let safe areas calculate
+          await new Promise(resolve => setTimeout(resolve, 150));
+
+          setIsAppReady(true);
+        } catch (err) {
+          console.error('App initialization error:', err);
+          setIsAppReady(true); // Proceed anyway
+        }
+      }
+    };
+
+    initializeApp();
   }, []);
 
   useEffect(() => {
@@ -294,6 +323,73 @@ function App() {
     setSelectedBook(bookData);
     setShowDescriptModal(true);
   };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const token = session?.access_token;
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/delete-account`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete account');
+      }
+
+      await signOut();
+      setShowDeleteAccountModal(false);
+
+      alert('Your account has been scheduled for deletion. All data will be permanently removed.');
+
+    } catch (err) {
+      console.error('Delete account error:', err);
+      throw err;
+    }
+  };
+  const handleDeleteScan = async (scanId) => {
+    try {
+      const token = session?.access_token;
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/scans/${scanId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete scan');
+      }
+
+      // Remove the scan from local state
+      setScanHistory(prevHistory => prevHistory.filter(scan => scan.id !== scanId));
+
+      // Optional: Show success feedback
+      console.log('Scan deleted successfully');
+
+      if (Capacitor.isNativePlatform()) {
+        await Haptics.notification({ type: NotificationType.Success });
+      }
+
+    } catch (error) {
+      console.error('Error deleting scan:', error);
+      alert('Failed to delete scan. Please try again.');
+      throw error;
+    }
+  };
+
   const takeNativePhoto = async () => {
     await Haptics.impact({style: ImpactStyle.Light});
     setLoading(true);
@@ -350,7 +446,15 @@ function App() {
   return (
       <>
         <DeepLinkHandler/>
-        <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col pt-safe">
+        {!isAppReady ? (
+            <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4"/>
+                <p className="text-gray-600">Loading Shelf Scan...</p>
+              </div>
+            </div>
+        ) : (
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
           {/*style={{ paddingTop: 'env(safe-area-inset-top)' }}>*/}
           <div className="flex-1 overflow-hidden pb-16">
             {/* SCAN TAB */}
@@ -492,6 +596,24 @@ function App() {
                             <p>{error}</p>
                           </div>
                       )}
+                    </div>
+
+                    {/* Help Text Disclaimer */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <span className="text-lg">📸</span>
+                          <p className="text-sm text-blue-800">
+                            <strong>Photo tips:</strong> Make sure book spines are clearly readable, avoid shadows and glare, and limit amount of spines included (5-10 works best!)
+                          </p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-lg">❓</span>
+                          <p className="text-sm text-blue-800">
+                            <strong>Something wrong?</strong> Try taking the photo again or re-upload (AI is not perfect!)
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Results - keep all your existing book display code */}
@@ -719,8 +841,8 @@ function App() {
                        WebkitOverflowScrolling: 'touch',
                        overscrollBehavior: 'contain'
                      }}>
-                  <div className="max-w-6xl mx-auto p-8 pb-8"
-                       style={{ paddingTop: 'max(env(safe-area-inset-top))'}}>
+                  <div className="max-w-6xl mx-auto p-8 pb-8">
+                       {/*style={{ paddingTop: 'max(env(safe-area-inset-top))'}}*/}
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">My Reading List</h2>
                     {user ? (
                         <ReadingList isOpen={true} onClose={() => setActiveTab('scan')}/>
@@ -765,30 +887,19 @@ function App() {
                             </div>
                         ) : (
                             <div className="space-y-4">
+                              {/* Swipe instruction hint */}
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                                <p className="text-sm text-blue-800 text-center">
+                                  💡 <strong>Tip:</strong> Swipe left on any scan to delete it
+                                </p>
+                              </div>
+
                               {scanHistory.map((scan) => (
-                                  <div key={scan.id} className="bg-white rounded-xl shadow-lg p-6">
-                                    <div className="flex justify-between items-start mb-2">
-                                      <p className="text-sm text-gray-500">
-                                        {new Date(scan.created_at).toLocaleDateString()} at{' '}
-                                        {new Date(scan.created_at).toLocaleTimeString()}
-                                      </p>
-                                      <span className="text-sm font-medium text-indigo-600">
-                            {scan.books.length} books
-                          </span>
-                                    </div>
-                                    <div className="flex gap-2 flex-wrap">
-                                      {scan.books.slice(0, 3).map((book, idx) => (
-                                          <span key={idx} className="text-sm bg-gray-100 px-2 py-1 rounded">
-                              {book.title}
-                            </span>
-                                      ))}
-                                      {scan.books.length > 3 && (
-                                          <span className="text-sm text-gray-500">
-                              +{scan.books.length - 3} more
-                            </span>
-                                      )}
-                                    </div>
-                                  </div>
+                                  <SwipeableScanItem
+                                      key={scan.id}
+                                      scan={scan}
+                                      onDelete={handleDeleteScan}
+                                  />
                               ))}
                             </div>
                         )
@@ -807,17 +918,19 @@ function App() {
                 </div>
             )}
 
-            {/* PROFILE TAB - Keep your existing code */}
+            {/* PROFILE TAB */}
             {activeTab === 'profile' && (
                 <div className="h-full overflow-y-auto"
                      style={{
                        WebkitOverflowScrolling: 'touch',
                        overscrollBehavior: 'contain'
                      }}>
-                  <div className="max-w-6xl mx-auto p-8">
+                  <div className="max-w-6xl mx-auto p-8 pb-24">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile</h2>
+
                     {user ? (
                         <div className="space-y-4">
+                          {/* User Info Card */}
                           <div className="bg-white rounded-xl shadow-lg p-6">
                             <div className="flex items-center gap-4 mb-4">
                               <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
@@ -845,6 +958,7 @@ function App() {
                                 <span className="font-medium">Scan History</span>
                                 <History className="w-5 h-5 text-gray-400"/>
                               </button>
+
                               <button
                                   onClick={() => setShowPwChangeModal(true)}
                                   className="w-full text-left px-4 py-3 bg-gray-50 rounded-full flex items-center justify-between active:scale-95 transition-transform"
@@ -855,12 +969,31 @@ function App() {
                             </div>
                           </div>
 
-                          <button
-                              onClick={handleSignOut}
-                              className="w-full px-4 py-3 bg-red-100 text-red-700 rounded-full transition-transform active:scale-95 font-semibold"
-                          >
-                            Sign Out
-                          </button>
+                          {/* Account Actions */}
+                          <div className="space-y-3">
+                            <button
+                                onClick={handleSignOut}
+                                className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-full font-semibold hover:bg-gray-200 transition-colors active:scale-95"
+                            >
+                              Sign Out
+                            </button>
+
+                            <button
+                                onClick={() => setShowDeleteAccountModal(true)}
+                                className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-full font-semibold hover:bg-red-100 transition-colors active:scale-95 flex items-center justify-center gap-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete Account
+                            </button>
+                          </div>
+
+                          {/* Privacy Notice */}
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <p className="text-sm text-blue-800">
+                              <strong>Data Privacy:</strong> You can delete individual scans by swiping left in your History,
+                              or permanently delete your entire account and all associated data with the button above.
+                            </p>
+                          </div>
                         </div>
                     ) : (
                         <div className="bg-white rounded-xl shadow-lg p-8 text-center">
@@ -868,23 +1001,36 @@ function App() {
                           <p className="text-gray-600 mb-4">Sign in to access your profile and saved data</p>
                           <button
                               onClick={() => setShowAuthModal(true)}
-                              className="px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold"
+                              className="px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700"
                           >
                             Sign In
                           </button>
-
                         </div>
                     )}
-                  </div>
-                  <div className="text-center mb-6">
-                    <p className="text-sm text-gray-600 mb-2">
-                      Thanks for using Shelf Scan! Let me know if you have any <a href="mailto:admin@shelfscan.xyz" className="text-indigo-600">comments or suggestions</a>!
-                    </p>
+
+                    {/* Thank you message - VISIBLE TO EVERYONE */}
+                    <div className="text-center mt-6">
+                      <p className="text-sm text-gray-600">
+                        Thanks for using Shelf Scan! Let us know if you have any{' '}
+                        <a href="mailto:admin@shelfscan.xyz" className="text-indigo-600 hover:underline">
+                          comments or suggestions
+                        </a>!
+                      </p>
+                    </div>
+                    <div className="text-center mt-6">
+                      <a href="#"
+                         onClick={(e) => {
+                           e.preventDefault();
+                           setShowPrivacyModal(true)
+                         }}
+                         className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
+                         >
+                        Privacy Policy
+                      </a>
+                    </div>
                   </div>
                 </div>
             )}
-          </div>
-        </div>
 
         {/* Crop Modal */}
         {showCropModal && (
@@ -964,7 +1110,9 @@ function App() {
               </div>
             </div>
         )}
-
+          </div>
+        </div>
+      )}
 
         {/* Tab Bar - MUST be outside the scrolling container to stay fixed */}
         <TabBar activeTab={activeTab} onTabChange={setActiveTab}/>
@@ -982,6 +1130,10 @@ function App() {
             onClose={() => setShowDescriptModal(false)}
             book={selectedBook}
         />
+        <PrivacyModal
+          isOpen={showPrivacyModal}
+          onClose={() => setShowPrivacyModal(false)}
+          />
         <PwChangeModal
             isOpen={showPwChangeModal}
             onClose={() => setShowPwChangeModal(false)}
@@ -990,7 +1142,14 @@ function App() {
             isOpen={showWelcome}
             onClose={handleCloseWelcome}
         />
+        <DeleteAccountModal
+          isOpen={showDeleteAccountModal}
+          onClose={() => setShowDeleteAccountModal(false)}
+          onConfirmDelete={handleDeleteAccount}
+          userEmail={user?.email}
+        />
         <HelpButton />
+
       </>
   );
 }
