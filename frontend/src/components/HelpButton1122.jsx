@@ -29,10 +29,9 @@ const HelpButton = () => {
                     />
 
                     {/* Slide-in Panel */}
-                    <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto ">
+                    <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto mt-6">
                         {/* Header - Sticky with safe area */}
-                        <div className="sticky top-0 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-md z-10"
-                            style={{ paddingTop: '1.5rem', paddingBottom: '1.5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
+                        <div className="sticky top-0 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-md z-10" style={{ paddingTop: 'max(env(safe-area-inset-top)', paddingBottom: '1.5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h2 className="text-2xl font-bold mb-1">Quick Start Guide</h2>
@@ -126,7 +125,7 @@ const HelpButton = () => {
                             </section>
 
                             {/* Goodreads Import */}
-
+                            {isIOS && (
                                 <section>
                                     <h3 className="text-xl font-bold text-gray-800 mb-3">📚 Import Goodreads</h3>
                                     <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
@@ -134,18 +133,47 @@ const HelpButton = () => {
                                             Auto-highlight books you own when scanning!
                                         </p>
                                         <div className="space-y-2 text-sm text-emerald-700">
+                                            <p><strong>On Goodreads:</strong></p>
                                             <ol className="ml-4 space-y-1">
-                                                <li>1. Click 'Open Goodreads Export' in the 'My Reading List'</li>
-                                                <li>2. Click 'Export Library' on the Goodreads site</li>
-                                                <li>3. Click the generated link titled 'Your export from...' (may take a second)</li>
-                                                <li>4. Your list will then be downloaded to your phone</li>
-                                                <li>5. Return to the app and upload the downloaded list by clicking 'Upload'</li>
-                                                <li>6. You can then view your Goodreads list in the app!</li>
+                                                <li>1. Go to "My Books"</li>
+                                                <li>2. Find "Import and export"</li>
+                                                <li>3. Export Library → Copy CSV</li>
+                                            </ol>
+                                            <p className="mt-2"><strong>In Shelf Scan:</strong></p>
+                                            <ol className="ml-4 space-y-1">
+                                                <li>1. Go to My Library</li>
+                                                <li>2. Paste Reading List</li>
+                                                <li>3. Paste CSV file and Import!</li>
                                             </ol>
                                         </div>
                                     </div>
                                 </section>
+                            )}
+                            {isAndroid && (
+                                <section>
+                                    <h3 className="text-xl font-bold text-gray-800 mb-3">📚 Import Goodreads</h3>
+                                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                                        <p className="text-sm text-emerald-800 mb-3">
+                                            Auto-highlight books you own when scanning!
+                                        </p>
+                                        <div className="space-y-2 text-sm text-emerald-700">
+                                            <p><strong>On a computer (desktop or laptop - NOT mobile device)</strong></p>
+                                            <ol className="ml-4 space-y-1">
+                                                <li>1. Go to shelfscan.xyz</li>
+                                                <li>2. Login with your Shelf Scan account (same as app)</li>
+                                                <li>3. Go to 'My Reading List'</li>
+                                                <li>4. Click link to 'Get your export'</li>
+                                                <li>5. Click 'Export Library' on Goodreads site </li>
+                                                <li>6. Download the generated list </li>
+                                                <li>7. Go back to Shelf Scan website and 'Choose CSV File'</li>
+                                                <li>8. Select the downloaded CSV file</li>
+                                                <li>9. Your reading list is now imported into Shelf Scan and will appear on the app!</li>
 
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </section>
+                            )}
 
                             {/* Troubleshooting */}
                             <section>

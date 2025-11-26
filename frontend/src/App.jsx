@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Upload, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
+import { Upload, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, ChevronRight, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import AuthModal from './AuthModal';
 import ReadingList from './ReadingList';
@@ -454,668 +454,697 @@ function App() {
               </div>
             </div>
         ) : (
-        <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
-          {/*style={{ paddingTop: 'env(safe-area-inset-top)' }}>*/}
-          <div className="flex-1 overflow-hidden pb-16">
-            {/* SCAN TAB */}
-            {activeTab === 'scan' && (
-                <div className="h-full overflow-y-auto"
-                     style={{
-                       WebkitOverflowScrolling: 'touch',
-                       overscrollBehavior: 'contain'
-                     }}>
-                  <div className="max-w-6xl mx-auto p-8 pb-8 min-h-full">
-                    {/*style={{ paddingTop: 'max(5rem, env(safe-area-inset-top))' }}>*/}
-                    {/* Your existing scan content - keep all of it */}
-                    {/* Description text */}
-                    <div className="text-center mb-6 sm:mb-8">
-                      <p className="text-sm sm:text-base text-gray-600 px-4">Upload a photo of book spines to find the
-                        highest-rated books.</p>
-                      <p className="text-sm sm:text-base text-gray-600 px-4">Optionally register/sign-in to store your
-                        scan history and to see if a scanned book is in your Goodreads reading list!</p>
+            <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+              {/*style={{ paddingTop: 'env(safe-area-inset-top)' }}>*/}
+              <div className="flex-1 overflow-hidden pb-16">
+                {/* SCAN TAB */}
+                {activeTab === 'scan' && (
+                    <div className="h-full overflow-y-auto"
+                         style={{
+                           WebkitOverflowScrolling: 'touch',
+                           overscrollBehavior: 'contain'
+                         }}>
+                      <div className="max-w-6xl mx-auto p-8 pb-8 min-h-full">
+                        {/*style={{ paddingTop: 'max(5rem, env(safe-area-inset-top))' }}>*/}
+                        {/* Your existing scan content - keep all of it */}
+                        {/* Description text */}
+                        <div className="text-center mb-6 sm:mb-8">
+                          <p className="text-sm sm:text-base text-gray-600 px-4">Upload a photo of book spines to find the
+                            highest-rated books.</p>
+                          <p className="text-sm sm:text-base text-gray-600 px-4">Optionally register/sign-in to store your
+                            scan history and to see if a scanned book is in your Goodreads reading list!</p>
 
-                      {savingScan && (
-                          <div className="mt-2 text-sm text-indigo-600">
-                            💾 Saving scan to your library...
-                          </div>
-                      )}
-                    </div>
+                          {savingScan && (
+                              <div className="mt-2 text-sm text-indigo-600">
+                                💾 Saving scan to your library...
+                              </div>
+                          )}
+                        </div>
 
-                    {/* Match notification */}
-                    {user && matchedCount > 0 && (
-                        <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-8">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <BookOpen className="w-5 h-5 text-emerald-600"/>
-                              <span className="font-semibold text-emerald-800">
+                        {/* Match notification */}
+                        {user && matchedCount > 0 && (
+                            <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-8">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <BookOpen className="w-5 h-5 text-emerald-600"/>
+                                  <span className="font-semibold text-emerald-800">
                           Found {matchedCount} book{matchedCount !== 1 ? 's' : ''} from your reading list!
                         </span>
+                                </div>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input
+                                      type="checkbox"
+                                      checked={showOnlyMatches}
+                                      onChange={(e) => setShowOnlyMatches(e.target.checked)}
+                                      className="w-4 h-4 text-emerald-600 rounded"
+                                  />
+                                  <span className="text-sm font-medium text-emerald-700">Show only my books</span>
+                                </label>
+                              </div>
                             </div>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                  type="checkbox"
-                                  checked={showOnlyMatches}
-                                  onChange={(e) => setShowOnlyMatches(e.target.checked)}
-                                  className="w-4 h-4 text-emerald-600 rounded"
-                              />
-                              <span className="text-sm font-medium text-emerald-700">Show only my books</span>
-                            </label>
-                          </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Upload area - your existing code */}
-                    <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-                      {/* Keep all your existing upload/camera UI */}
-                      <div className="flex flex-col items-center gap-4">
-                        <label className="w-full cursor-pointer">
-                          <div
-                              className="border-4 border-dashed border-indigo-200 rounded-lg p-12 text-center hover:border-indigo-400 transition-colors">
-                            {image ? (
-                                <img src={image} alt="Uploaded books" className="max-h-96 mx-auto rounded-lg"/>
-                            ) : (
-                                <div className="flex flex-col items-center gap-3">
-                                  <Upload className="w-16 h-16 text-indigo-400"/>
-                                  <p className="text-lg text-gray-600">Click to upload or take a photo</p>
-                                  <p className="text-sm text-gray-400">JPG, PNG up to 10MB</p>
+                        {/* Upload area - your existing code */}
+                        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+                          {/* Keep all your existing upload/camera UI */}
+                          <div className="flex flex-col items-center gap-4">
+                            <label className="w-full cursor-pointer">
+                              <div
+                                  className="border-4 border-dashed border-indigo-200 rounded-lg p-12 text-center hover:border-indigo-400 transition-colors">
+                                {image ? (
+                                    <img src={image} alt="Uploaded books" className="max-h-96 mx-auto rounded-lg"/>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-3">
+                                      <Upload className="w-16 h-16 text-indigo-400"/>
+                                      <p className="text-lg text-gray-600">Click to upload or take a photo</p>
+                                      <p className="text-sm text-gray-400">JPG, PNG up to 10MB</p>
+                                    </div>
+                                )}
+                              </div>
+                              <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleImageUpload}
+                                  className="hidden"
+                              />
+                            </label>
+
+                            {!image && (
+                                <div className="flex gap-3 w-full max-w-md">
+                                  <button
+                                      onClick={takeNativePhoto}
+                                      className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2"
+                                  >
+                                    <Camera className="w-5 h-5"/>
+                                    Take Photo
+                                  </button>
+
+                                  <label className="flex-1 cursor-pointer">
+                                    <div
+                                        className="px-6 py-3 bg-gray-600 text-white rounded-full font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
+                                      <Upload className="w-5 h-5"/>
+                                      Upload File
+                                    </div>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                    />
+                                  </label>
+                                </div>
+                            )}
+
+                            {image && (
+                                <div className="flex gap-3">
+                                  <button
+                                      onClick={scanBooks}
+                                      disabled={loading}
+                                      className="px-8 py-3 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95 transition-transform"
+                                  >
+                                    {loading ? (
+                                        <>
+                                          <Loader2 className="w-5 h-5 animate-spin"/>
+                                          Scanning Books...
+                                        </>
+                                    ) : (
+                                        <>
+                                          <Book className="w-5 h-5"/>
+                                          Scan & Rate Books
+                                        </>
+                                    )}
+                                  </button>
+
+                                  <button
+                                      onClick={() => {
+                                        setImage(null);
+                                        setBooks([]);
+                                        setError('');
+                                      }}
+                                      disabled={loading}
+                                      className="px-6 py-3 bg-gray-200 text-gray-700 rounded-full font-semibold hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-transform active:scale-95"
+                                  >
+                                    Clear
+                                  </button>
                                 </div>
                             )}
                           </div>
-                          <input
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageUpload}
-                              className="hidden"
-                          />
-                        </label>
 
-                        {!image && (
-                            <div className="flex gap-3 w-full max-w-md">
-                              <button
-                                  onClick={takeNativePhoto}
-                                  className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2"
-                              >
-                                <Camera className="w-5 h-5"/>
-                                Take Photo
-                              </button>
+                          {error && (
+                              <div className="mt-4 p-4 border rounded-lg flex items-start gap-3 bg-red-50 border-red-200 text-red-700">
+                                <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5"/>
+                                <p>{error}</p>
+                              </div>
+                          )}
+                        </div>
 
-                              <label className="flex-1 cursor-pointer">
-                                <div
-                                    className="px-6 py-3 bg-gray-600 text-white rounded-full font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
-                                  <Upload className="w-5 h-5"/>
-                                  Upload File
-                                </div>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleImageUpload}
-                                    className="hidden"
-                                />
-                              </label>
+                        {/* Help Text Disclaimer */}
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                          <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                              <span className="text-lg">📸</span>
+                              <p className="text-sm text-blue-800">
+                                <strong>Photo tips:</strong> Make sure book spines are clearly readable, avoid shadows and glare, and limit amount of spines included (5-10 works best!)
+                              </p>
                             </div>
-                        )}
-
-                        {image && (
-                            <div className="flex gap-3">
-                              <button
-                                  onClick={scanBooks}
-                                  disabled={loading}
-                                  className="px-8 py-3 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95 transition-transform"
-                              >
-                                {loading ? (
-                                    <>
-                                      <Loader2 className="w-5 h-5 animate-spin"/>
-                                      Scanning Books...
-                                    </>
-                                ) : (
-                                    <>
-                                      <Book className="w-5 h-5"/>
-                                      Scan & Rate Books
-                                    </>
-                                )}
-                              </button>
-
-                              <button
-                                  onClick={() => {
-                                    setImage(null);
-                                    setBooks([]);
-                                    setError('');
-                                  }}
-                                  disabled={loading}
-                                  className="px-6 py-3 bg-gray-200 text-gray-700 rounded-full font-semibold hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-transform active:scale-95"
-                              >
-                                Clear
-                              </button>
+                            <div className="flex items-start gap-2">
+                              <span className="text-lg">❓</span>
+                              <p className="text-sm text-blue-800">
+                                <strong>Something wrong?</strong> Try taking the photo again or re-upload (AI is not perfect!)
+                              </p>
                             </div>
-                        )}
-                      </div>
-
-                      {error && (
-                          <div className="mt-4 p-4 border rounded-lg flex items-start gap-3 bg-red-50 border-red-200 text-red-700">
-                            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5"/>
-                            <p>{error}</p>
                           </div>
-                      )}
-                    </div>
-
-                    {/* Help Text Disclaimer */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                      <div className="space-y-2">
-                        <div className="flex items-start gap-2">
-                          <span className="text-lg">📸</span>
-                          <p className="text-sm text-blue-800">
-                            <strong>Photo tips:</strong> Make sure book spines are clearly readable, avoid shadows and glare, and limit amount of spines included (5-10 works best!)
-                          </p>
                         </div>
-                        <div className="flex items-start gap-2">
-                          <span className="text-lg">❓</span>
-                          <p className="text-sm text-blue-800">
-                            <strong>Something wrong?</strong> Try taking the photo again or re-upload (AI is not perfect!)
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Results - keep all your existing book display code */}
-                    {topThreeBooks.length > 0 && (
-                        <div className="space-y-6">
-                          <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">
-                            🏆 Top 3 Highest-Rated Books
-                          </h2>
-                          {/* Keep all your existing book cards */}
-                          {topThreeBooks.map((book, index) => (
-                              <div key={index}
-                                   className={`bg-white rounded-2xl shadow-sm mx-4 mb-4 overflow-hidden active:scale-95 transition-transform ${
-                                       book.inReadingList ? 'ring-4 ring-emerald-400' : ''
-                                   }`}>
-                                <div className="flex gap-6 p-6">
-                                  {book.thumbnail && (
-                                      <img
-                                          src={book.thumbnail}
-                                          alt={book.title}
-                                          className="w-32 h-48 object-cover rounded-lg shadow-md"
-                                      />
-                                  )}
+                        {/* Results - keep all your existing book display code */}
+                        {topThreeBooks.length > 0 && (
+                            <div className="space-y-6 px-4">
+                              <div className="text-center py-4">
+                                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                                  🏆 Top Rated Books
+                                </h2>
+                                <p className="text-gray-600 mt-1">
+                                  Found {books.length} books • Sorted by rating
+                                </p>
+                              </div>
+                              {/* Keep all your existing book cards */}
+                              {topThreeBooks.map((book, index) => (
+                                  <div
+                                      key={index}
+                                      className={`bg-white rounded-3xl shadow-lg overflow-hidden ${
+                                          book.inReadingList ? 'ring-4 ring-emerald-400' : ''
+                                      }`}
+                                  >
+                                    <div className="relative">
+                                      <div className="absolute inset-0 bg-gradient-to-b from-indigo-100 via-indigo-50 to-white" />
 
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-start justify-between mb-3">
-                                      <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                            <span
-                                                className="text-2xl sm:text-3xl font-bold text-indigo-600">#{index + 1}</span>
-                                          <h3 className="text-xl sm:text-2xl font-bold text-gray-800 break-words">{book.title}</h3>
+                                      <div className="absolute top-4 left-4 z-10">
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                                            index === 0 ? 'bg-amber-400' :
+                                                index === 1 ? 'bg-gray-400' :
+                                                    'bg-orange-400'
+                                        }`}>
+                                          <span className="text-white font-bold text-xl">#{index + 1}</span>
                                         </div>
-                                        <p className="text-base sm:text-lg text-gray-600 mb-2">by {book.author}</p>
+                                      </div>
+                                      {book.inReadingList && (
+                                          <div className="absolute top-4 right-4 z-10">
+                                            <div className="bg-emerald-500 text-white px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg">
+                                              <BookOpen className="w-4 h-4" />
+                                              On Your List
+                                            </div>
+                                          </div>
+                                      )}
+                                      <div className="relative pt-10 pb-8 flex justify-center">
+                                        {book.thumbnail ? (
+                                            <img
+                                                src={book.thumbnail}
+                                                alt={book.title}
+                                                className="w-40 h-56 sm:w-48 sm:h-68 object-cover rounded-2xl shadow-2xl"
+                                            />
+                                        ) : (
+                                            <div className="w-40 h-56 sm:w-48 sm:h-68 bg-gray-200 rounded-2xl flex items-center justify-center shadow-xl">
+                                              <BookOpen className="w-16 h-16 text-gray-400"/>
+                                            </div>
+                                        )}
                                       </div>
                                     </div>
-                                    {/* Reading List Badge - ADD THIS */}
-                                    {book.inReadingList && (
-                                        <div
-                                            className="mb-4 inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-2 rounded-lg border border-emerald-300">
-                                          <BookOpen className="w-5 h-5"/>
-                                          <div>
-                                            <span className="font-bold">📚 On Your Reading List!</span>
-                                            {book.readingListInfo && (
-                                                <div className="text-sm mt-1">
-                                                  Shelf: <span
-                                                    className="capitalize">{book.readingListInfo.shelf?.replace('-', ' ')}</span>
-                                                  {book.readingListInfo.myRating && (
-                                                      <span> • Your Rating: {book.readingListInfo.myRating}★</span>
-                                                  )}
-                                                </div>
+
+                                    <div className="px-6 pb-8 mt-2">
+                                      <div className="text-center mb-5">
+                                        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                                          {book.title}
+                                        </h3>
+                                        <p className="text-lg text-gray-600 mt-1">by {book.author}</p>
+                                      </div>
+
+                                      <div className="flex justify-center mb-5">
+                                        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-50 to-amber-100 px-6 py-4 rounded-2xl border border-amber-200">
+                                          <Star className="w-8 h-8 fill-amber-400 text-amber-400"/>
+                                          <div className="text-left">
+                                        <span className="text-3xl font-bold text-gray-800">
+                                          {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
+                                        </span>
+                                            {book.ratingsCount > 0 && (
+                                                <p className="text-sm text-gray-600">
+                                                  {book.ratingsCount.toLocaleString()} ratings
+                                                </p>
                                             )}
                                           </div>
                                         </div>
-                                    )}
-
-                                    <div className="flex items-center gap-4 mb-4">
-                                      <div className="flex items-center gap-1">
-                                        <Star className="w-6 h-6 fill-yellow-400 text-yellow-400"/>
-                                        <span className="text-2xl font-bold text-gray-800">
-                                    {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
-                                  </span>
                                       </div>
-                                      {book.ratingsCount > 0 && (
-                                          <span className="text-gray-500">
-                                    ({book.ratingsCount.toLocaleString()} ratings)
-                                  </span>
+
+                                      {book.ratingSource && (
+                                          <p className="text-center text-sm text-gray-500 mb-5">
+                                            📊 {book.ratingSource}
+                                          </p>
                                       )}
-                                    </div>
 
-                                    {book.ratingSource && (
-                                        <div
-                                            className="mb-4 text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg inline-block">
-                                          📊 Rating from: {book.ratingSource}
-                                        </div>
-                                    )}
+                                      {/* Reading List Info */}
+                                      {book.inReadingList && book.readingListInfo && (
+                                          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-5">
+                                            <div className="flex items-center justify-center gap-2 text-emerald-800">
+                                              <BookOpen className="w-5 h-5" />
+                                              <span className="font-semibold">
+                                            {book.readingListInfo.shelf === 'read' ? '✓ You\'ve read this!' :
+                                                book.readingListInfo.shelf === 'currently-reading' ? '📖 Currently reading' :
+                                                    '📚 On your to-read list'}
+                                          </span>
+                                              {book.readingListInfo.myRating > 0 && (
+                                                  <span className="ml-2">• You rated it {book.readingListInfo.myRating}★</span>
+                                              )}
+                                            </div>
+                                          </div>
+                                      )}
 
-                                    <div className="mb-4">
-                                      <p className="text-gray-700 leading-relaxed">
-                                        {book.description.replace(/<[^>]*>/g, '').substring(0, 150)}
-                                        {book.description.length > 150 && (
-                                            <>
-                                              ...{' '}
-                                              <button
-                                                  onClick={async () => {
-                                                    await Haptics.impact({style: ImpactStyle.Light});
-                                                    openDescriptModal(book)
-                                                  }}
-                                                  className="min-h-[44px]text-blue-600 hover:text-blue-800 underline font-medium cursor-pointer touch-manipulation transition-transform active:scale-95"
-                                              >
-                                                More
-                                              </button>
-                                            </>
-                                        )}
-                                      </p>
+                                      <div className="mb-4">
+                                        <p className="text-gray-700 leading-relaxed text-center">
+                                          {book.description.replace(/<[^>]*>/g, '').substring(0, 200)}
+                                          {book.description.length > 200 && (
+                                              <>
+                                                ...{' '}
+                                                <button
+                                                    onClick={async () => {
+                                                      await Haptics.impact({style: ImpactStyle.Light});
+                                                      openDescriptModal(book)
+                                                    }}
+                                                    className="text-indigo-600 hover:text-indigo-800 font-semibold"
+                                                >
+                                                  Read More
+                                                </button>
+                                              </>
+                                          )}
+                                        </p>
+                                      </div>
 
-                                    </div>
-
-                                    <div className="flex flex-wrap gap-4 items-center justify-start">
-                                      <a
-                                          href={book.amazonUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center justify-center"
-                                      >
-                                        <img src={amazonImage} alt="Buy on Amazon"
-                                             className="h-12 w-auto sm:h-14 hover:opacity-80 transition-opacity"/>
-
-                                      </a>
-                                      {book.infoLink && (
+                                      <div className="space-y-3">
+                                        <div className="grid grid-cols-2 gap-3">
                                           <a
-                                              href={book.infoLink}
+                                              href={book.amazonUrl}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="inline-flex items-center justify-center"
+                                              className="flex items-center justify-center gap-2 bg-amber-100 hover:bg-amber-200 py-4 rounded-2xl transition-all active:scale-95"
                                           >
-                                            <img src={googleImage} alt="See on Google Books"
-                                                 className="h-10 w-auto sm:h-12 hover:opacity-80 transition-opacity"/>
-                                            {/* className="inline-flex items-center justify-center px-2 py-1.5 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors font-medium min-h-[36px] text-xs sm:text-sm sm:px-4 sm:py-2"
-
-                                  >
-                                    Google → */}
+                                            <img src={amazonImage} alt="Buy on Amazon" className="h-12 w-auto" />
                                           </a>
-                                      )}
-                                      {book.goodreadsUrl && (
                                           <a
                                               href={book.goodreadsUrl}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="inline-flex items-center justify-center"
+                                              className="flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-200 py-4 rounded-2xl transition-all active:scale-95"
                                           >
-                                            <img src={goodreadsImage} alt="See on Goodreads"
-                                                 className="h-10 w-auto sm:h-12 hover:opacity-80 transition-opacity"/>
-                                            {/* className="inline-flex items-center justify-center px-2 py-1.5 bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 transition-colors font-medium min-h-[36px] text-xs sm:text-sm sm:px-4 sm:py-2"
-                                    >
-                                    Goodreads → */}
+                                            <img src={goodreadsImage} alt="See on Goodreads" className="h-12" />
                                           </a>
-                                      )}
-                                      <button
-                                          onClick={async() =>{
-                                            Haptics.impact({style: ImpactStyle.Light});
-                                            shareBook(book)
-                                          }}
-                                          className="inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-transform active:scale-95 font-medium"
-                                      >
-                                        <ShareIcon className="w-4 h-4 mr-2" />
-                                        Share
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                          ))}
-                        </div>
-                    )}
-
-                    {/* Other books section - keep your existing code */}
-                    {books.length > 3 && (
-                        <div className="mt-8 bg-white rounded-xl shadow-lg p-6 active:scale-95 transition-transform">
-                          <h3 className="text-xl font-bold text-gray-800 mb-4">Other Books Found</h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {books.slice(3).map((book, index) => (
-                                <div
-                                    key={index}
-                                    className={`flex gap-3 p-4 border rounded-lg hover:border-indigo-300 transition-colors ${
-                                        book.inReadingList ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200' : 'border-gray-200'
-                                    }`}
-                                    onClick={async () => {
-                                      await Haptics.impact({style: ImpactStyle.Light});
-                                      openLinkModal(book)
-                                    }}
-                                >
-                                  <div className="flex-1">
-                                    <div className="flex items-start justify-between">
-                                      <h4 className="font-semibold text-gray-800">{book.title}</h4>
-                                      {book.inReadingList && (
-                                          <BookOpen className="w-4 h-4 text-emerald-600 flex-shrink-0 ml-2"/>
-                                      )}
-                                    </div>
-                                    <p className="text-sm text-gray-600">{book.author}</p>
-                                    <div className="flex items-center gap-1 mt-1">
-                                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400"/>
-                                      <span className="text-sm font-medium">
-                                  {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
-                                </span>
-                                      {book.ratingsCount > 0 && (
-                                          <span className="text-xs text-gray-500">({book.ratingsCount})</span>
-                                      )}
-                                      {book.sources && book.sources.length > 0 && (
-                                          <span className="text-xs text-gray-400 ml-1">
-                                    • {book.sources.join('+')}
-                                  </span>
-                                      )}
-                                    </div>
-                                    {/* NEW: Show shelf for matched books */}
-                                    {book.inReadingList && book.readingListInfo && (
-                                        <div className="text-xs text-emerald-700 mt-1 font-medium">
-                                          {book.readingListInfo.shelf?.replace('-', ' ')}
                                         </div>
-                                    )}
+
+                                        <div className="flex gap-3">
+                                          {book.infoLink && (
+                                              <a
+                                                  href={book.infoLink}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 rounded-xl transition-all active:scale-95"
+                                              >
+                                                <img src={googleImage} alt="See on Google Books" className="h-6" />
+                                              </a>
+                                          )}
+                                          <button
+                                              onClick={async() =>{
+                                                Haptics.impact({style: ImpactStyle.Light});
+                                                shareBook(book)
+                                              }}
+                                              className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 rounded-xl transition-all active:scale-95"
+                                          >
+                                            <ShareIcon className="w-5 h-5" />
+                                            <span>Share</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-
-                            ))}
-                          </div>
-                          <div className="text-center mb-6 mt-2">
-                            <p className="text-sm text-gray-600 mb-2 mt-2">
-                              <strong className="text-gray-800">📢 Disclosure:</strong> As an Amazon Associate I earn from qualifying purchases.
-                              This means if you click on an Amazon link and make a purchase, I may receive a small commission at no extra cost to you.
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              Ratings and reviews are sourced from Google Books and Open Library.
-                              This tool is not affiliated with Amazon, Goodreads, or Google.
-                            </p>
-                          </div>
-                        </div>
-                    )}
-                  </div>
-                </div>
-            )}
-
-            {/* LIBRARY TAB - Keep your existing code */}
-
-            {activeTab === 'library' && (
-                <div className="h-full overflow-y-auto"
-                     style={{
-                       WebkitOverflowScrolling: 'touch',
-                       overscrollBehavior: 'contain'
-                     }}>
-                  <div className="max-w-6xl mx-auto p-8 pb-8">
-                       {/*style={{ paddingTop: 'max(env(safe-area-inset-top))'}}*/}
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">My Reading List</h2>
-                    {user ? (
-                        <ReadingList isOpen={true} onClose={() => setActiveTab('scan')}/>
-                    ) : (
-                        <EmptyState
-                            type="library"
-                            onAction={() => setShowAuthModal(true)}
-                            actionLabel="Sign In"
-                        />
-                    )}
-                  </div>
-                </div>
-            )}
-
-            {/* HISTORY TAB - Keep your existing code */}
-            {activeTab === 'history' && (
-                <div className="h-full overflow-y-auto"
-                     style={{
-                       WebkitOverflowScrolling: 'touch',
-                       overscrollBehavior: 'contain'
-                     }}>
-                  <div className="max-w-6xl mx-auto p-8 pb-8">
-                    {pulling && pullDistance >40 && (
-                        <div
-                            className="fixed top-0 left-0 right-0 flex justify-center transition-all"
-                            style={{
-                              transform: `translateY(${Math.min(pullDistance - 40, 60)}px)`,
-                              paddingTop: 'env(safe-area-inset-top)'
-                            }}
-                        >
-                          <div className="bg-white rounded-full p-3 shadow-lg">
-                            <Loader2 className={`w-6 h-6 text-indigo-600 ${pullDistance > 80 ? 'animate-spin' : ''}`} />
-                          </div>
-                        </div>
-                    )}
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Scan History</h2>
-                    {user ? (
-                        scanHistory.length === 0 ? (
-                            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                              <History className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
-                              <p className="text-gray-500">No scans yet. Start scanning books to build your history!</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                              {/* Swipe instruction hint */}
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                                <p className="text-sm text-blue-800 text-center">
-                                  💡 <strong>Tip:</strong> Swipe left on any scan to delete it
-                                </p>
-                              </div>
-
-                              {scanHistory.map((scan) => (
-                                  <SwipeableScanItem
-                                      key={scan.id}
-                                      scan={scan}
-                                      onDelete={handleDeleteScan}
-                                  />
                               ))}
                             </div>
-                        )
-                    ) : (
-                        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                          <p className="text-gray-600 mb-4">Sign in to view your scan history</p>
-                          <button
-                              onClick={() => setShowAuthModal(true)}
-                              className="px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold"
-                          >
-                            Sign In
-                          </button>
-                        </div>
-                    )}
-                  </div>
-                </div>
-            )}
+                        )}
 
-            {/* PROFILE TAB */}
-            {activeTab === 'profile' && (
-                <div className="h-full overflow-y-auto"
-                     style={{
-                       WebkitOverflowScrolling: 'touch',
-                       overscrollBehavior: 'contain'
-                     }}>
-                  <div className="max-w-6xl mx-auto p-8 pb-24">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile</h2>
+                        {/* Other books section - keep your existing code */}
+                        {displayBooks.length > 3 && (
+                            <div className="mt-8 px-4">
+                              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                                More Books Found
+                              </h3>
+                              <div className="space-y-3">
+                                {books.slice(3).map((book, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={async () => {
+                                          await Haptics.impact({style: ImpactStyle.Light});
+                                          openLinkModal(book)
+                                        }}
+                                        className={`w-full text-left bg-white rounded-2xl shadow-sm p-4 flex gap-4 transition-all active:scale-98 hover:shadow-md ${
+                                            book.inReadingList ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200' : 'border-gray-200'
+                                        }`}
+                                    >
 
-                    {user ? (
-                        <div className="space-y-4">
-                          {/* User Info Card */}
-                          <div className="bg-white rounded-xl shadow-lg p-6">
-                            <div className="flex items-center gap-4 mb-4">
-                              <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
-                                <User className="w-8 h-8 text-indigo-600"/>
-                              </div>
-                              <div>
-                                <p className="text-sm text-gray-500">Signed in as</p>
-                                <p className="font-semibold text-gray-800">{user.email}</p>
+                                      {book.thumbnail ? (
+                                          <img
+                                              src={book.thumbnail}
+                                              alt={book.title}
+                                              className="w-16 h-24 object-cover rounded-xl shadow flex-shrink-0"
+                                          />
+                                      ) : (
+                                          <div className="w-16 h-24 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                            <BookOpen className="w-6 h-6 text-gray-400"/>
+                                          </div>
+                                      )}
+
+                                      <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                        <div className="flex items-start justify-between gap-2">
+                                          <div className="min-w-0">
+                                            <h4 className="font-bold text-gray-900 line-clamp-2">{book.title}</h4>
+                                            <p className="text-sm text-gray-600">{book.author}</p>
+                                          </div>
+                                          {book.inReadingList && (
+                                              <BookOpen className="w-5 h-5 text-emerald-600 flex-shrink-0"/>
+                                          )}
+                                        </div>
+
+                                        <div className="flex items-center gap-2 mt-2">
+                                          <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
+                                            <Star className="w-4 h-4 fill-amber-400 text-amber-400"/>
+                                            <span className="text-sm font-bold">
+                                      {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
+                                    </span>
+                                          </div>
+                                          {book.ratingsCount > 0 && (
+                                              <span className="text-xs text-gray-500">
+                                        {book.ratingsCount.toLocaleString()}
+                                      </span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <ChevronRight className="w-5 h-5 text-gray-400 self-center flex-center-0" />
+                                    </button>
+                                ))}
+                                <div className="text-center mb-6 mt-2">
+                                  <p className="text-sm text-gray-600 mb-2 mt-2">
+                                    <strong className="text-gray-800">📢 Disclosure:</strong> As an Amazon Associate I earn from qualifying purchases.
+                                    This means if you click on an Amazon link and make a purchase, I may receive a small commission at no extra cost to you.
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    Ratings and reviews are sourced from Google Books and Open Library.
+                                    This tool is not affiliated with Amazon, Goodreads, or Google.
+                                  </p>
+                                </div>
                               </div>
                             </div>
+                        )}
+                      </div>
+                    </div>
+                )}
 
-                            <div className="border-t pt-4 space-y-3">
-                              <button
-                                  onClick={() => setActiveTab('library')}
-                                  className="w-full text-left px-4 py-3 bg-gray-50 rounded-full flex items-center justify-between active:scale-95 transition-transform"
-                              >
-                                <span className="font-medium">Reading List</span>
-                                <BookOpen className="w-5 h-5 text-gray-400"/>
-                              </button>
+                {/* LIBRARY TAB - Keep your existing code */}
 
-                              <button
-                                  onClick={() => setActiveTab('history')}
-                                  className="w-full text-left px-4 py-3 bg-gray-50 rounded-full transition-transform active:scale-95 flex items-center justify-between"
-                              >
-                                <span className="font-medium">Scan History</span>
-                                <History className="w-5 h-5 text-gray-400"/>
-                              </button>
+                {activeTab === 'library' && (
+                    <div className="h-full overflow-y-auto"
+                         style={{
+                           WebkitOverflowScrolling: 'touch',
+                           overscrollBehavior: 'contain'
+                         }}>
+                      <div className="max-w-6xl mx-auto p-8 pb-8">
+                        {/*style={{ paddingTop: 'max(env(safe-area-inset-top))'}}*/}
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">My Reading List</h2>
+                        {user ? (
+                            <ReadingList isOpen={true} onClose={() => setActiveTab('scan')}/>
+                        ) : (
+                            <EmptyState
+                                type="library"
+                                onAction={() => setShowAuthModal(true)}
+                                actionLabel="Sign In"
+                            />
+                        )}
+                      </div>
+                    </div>
+                )}
 
+                {/* HISTORY TAB - Keep your existing code */}
+                {activeTab === 'history' && (
+                    <div className="h-full overflow-y-auto"
+                         style={{
+                           WebkitOverflowScrolling: 'touch',
+                           overscrollBehavior: 'contain'
+                         }}>
+                      <div className="max-w-6xl mx-auto p-8 pb-8">
+                        {pulling && pullDistance >40 && (
+                            <div
+                                className="fixed top-0 left-0 right-0 flex justify-center transition-all"
+                                style={{
+                                  transform: `translateY(${Math.min(pullDistance - 40, 60)}px)`,
+                                  paddingTop: 'env(safe-area-inset-top)'
+                                }}
+                            >
+                              <div className="bg-white rounded-full p-3 shadow-lg">
+                                <Loader2 className={`w-6 h-6 text-indigo-600 ${pullDistance > 80 ? 'animate-spin' : ''}`} />
+                              </div>
+                            </div>
+                        )}
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Scan History</h2>
+                        {user ? (
+                            scanHistory.length === 0 ? (
+                                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                                  <History className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
+                                  <p className="text-gray-500">No scans yet. Start scanning books to build your history!</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                  {/* Swipe instruction hint */}
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                                    <p className="text-sm text-blue-800 text-center">
+                                      💡 <strong>Tip:</strong> Swipe left on any scan to delete it
+                                    </p>
+                                  </div>
+
+                                  {scanHistory.map((scan) => (
+                                      <SwipeableScanItem
+                                          key={scan.id}
+                                          scan={scan}
+                                          onDelete={handleDeleteScan}
+                                      />
+                                  ))}
+                                </div>
+                            )
+                        ) : (
+                            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                              <p className="text-gray-600 mb-4">Sign in to view your scan history</p>
                               <button
-                                  onClick={() => setShowPwChangeModal(true)}
-                                  className="w-full text-left px-4 py-3 bg-gray-50 rounded-full flex items-center justify-between active:scale-95 transition-transform"
+                                  onClick={() => setShowAuthModal(true)}
+                                  className="px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold"
                               >
-                                <span className="font-medium">Change Password</span>
-                                <Key className="w-5 h-5 text-gray-400"/>
+                                Sign In
                               </button>
                             </div>
-                          </div>
+                        )}
+                      </div>
+                    </div>
+                )}
 
-                          {/* Account Actions */}
-                          <div className="space-y-3">
-                            <button
-                                onClick={handleSignOut}
-                                className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-full font-semibold hover:bg-gray-200 transition-colors active:scale-95"
-                            >
-                              Sign Out
-                            </button>
+                {/* PROFILE TAB */}
+                {activeTab === 'profile' && (
+                    <div className="h-full overflow-y-auto"
+                         style={{
+                           WebkitOverflowScrolling: 'touch',
+                           overscrollBehavior: 'contain'
+                         }}>
+                      <div className="max-w-6xl mx-auto p-8 pb-24">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile</h2>
 
-                            <button
-                                onClick={() => setShowDeleteAccountModal(true)}
-                                className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-full font-semibold hover:bg-red-100 transition-colors active:scale-95 flex items-center justify-center gap-2"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Delete Account
-                            </button>
-                          </div>
+                        {user ? (
+                            <div className="space-y-4">
+                              {/* User Info Card */}
+                              <div className="bg-white rounded-xl shadow-lg p-6">
+                                <div className="flex items-center gap-4 mb-4">
+                                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
+                                    <User className="w-8 h-8 text-indigo-600"/>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-500">Signed in as</p>
+                                    <p className="font-semibold text-gray-800">{user.email}</p>
+                                  </div>
+                                </div>
 
-                          {/* Privacy Notice */}
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <p className="text-sm text-blue-800">
-                              <strong>Data Privacy:</strong> You can delete individual scans by swiping left in your History,
-                              or permanently delete your entire account and all associated data with the button above.
-                            </p>
-                          </div>
+                                <div className="border-t pt-4 space-y-3">
+                                  <button
+                                      onClick={() => setActiveTab('library')}
+                                      className="w-full text-left px-4 py-3 bg-gray-50 rounded-full flex items-center justify-between active:scale-95 transition-transform"
+                                  >
+                                    <span className="font-medium">Reading List</span>
+                                    <BookOpen className="w-5 h-5 text-gray-400"/>
+                                  </button>
+
+                                  <button
+                                      onClick={() => setActiveTab('history')}
+                                      className="w-full text-left px-4 py-3 bg-gray-50 rounded-full transition-transform active:scale-95 flex items-center justify-between"
+                                  >
+                                    <span className="font-medium">Scan History</span>
+                                    <History className="w-5 h-5 text-gray-400"/>
+                                  </button>
+
+                                  <button
+                                      onClick={() => setShowPwChangeModal(true)}
+                                      className="w-full text-left px-4 py-3 bg-gray-50 rounded-full flex items-center justify-between active:scale-95 transition-transform"
+                                  >
+                                    <span className="font-medium">Change Password</span>
+                                    <Key className="w-5 h-5 text-gray-400"/>
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Account Actions */}
+                              <div className="space-y-3">
+                                <button
+                                    onClick={handleSignOut}
+                                    className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-full font-semibold hover:bg-gray-200 transition-colors active:scale-95"
+                                >
+                                  Sign Out
+                                </button>
+
+                                <button
+                                    onClick={() => setShowDeleteAccountModal(true)}
+                                    className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-full font-semibold hover:bg-red-100 transition-colors active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete Account
+                                </button>
+                              </div>
+
+                              {/* Privacy Notice */}
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <p className="text-sm text-blue-800">
+                                  <strong>Data Privacy:</strong> You can delete individual scans by swiping left in your History,
+                                  or permanently delete your entire account and all associated data with the button above.
+                                </p>
+                              </div>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                              <User className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
+                              <p className="text-gray-600 mb-4">Sign in to access your profile and saved data</p>
+                              <button
+                                  onClick={() => setShowAuthModal(true)}
+                                  className="px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700"
+                              >
+                                Sign In
+                              </button>
+                            </div>
+                        )}
+
+                        {/* Thank you message - VISIBLE TO EVERYONE */}
+                        <div className="text-center mt-6">
+                          <p className="text-sm text-gray-600">
+                            Thanks for using Shelf Scan! Let us know if you have any{' '}
+                            <a href="mailto:admin@shelfscan.xyz" className="text-indigo-600 hover:underline">
+                              comments or suggestions
+                            </a>!
+                          </p>
                         </div>
-                    ) : (
-                        <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                          <User className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
-                          <p className="text-gray-600 mb-4">Sign in to access your profile and saved data</p>
-                          <button
-                              onClick={() => setShowAuthModal(true)}
-                              className="px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700"
+                        <div className="text-center mt-6">
+                          <a href="#"
+                             onClick={(e) => {
+                               e.preventDefault();
+                               setShowPrivacyModal(true)
+                             }}
+                             className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
                           >
-                            Sign In
+                            Privacy Policy
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                )}
+
+                {/* Crop Modal */}
+                {showCropModal && (
+                    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+                      {/* Crop Header */}
+                      <div className="bg-gray-900 text-white px-4 py-3 pt-safe flex justify-between items-center flex-shrink-0">
+                        <button
+                            onClick={handleCropCancel}
+                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors active:scale-95"
+                        >
+                          <X className="w-6 h-6" />
+                        </button>
+                        <h3 className="text-lg font-semibold">Adjust Photo</h3>
+                        <button
+                            onClick={handleCropConfirm}
+                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors active:scale-95"
+                        >
+                          <Check className="w-6 h-6 text-green-400" />
+                        </button>
+                      </div>
+
+                      {/* Crop Area - Takes remaining space */}
+                      <div className="flex-1 relative min-h-0 overflow-hidden">
+                        <Cropper
+                            image={imageToCrop}
+                            crop={crop}
+                            zoom={zoom}
+                            rotation={rotation}
+                            aspect={undefined} // Free aspect ratio
+                            onCropChange={setCrop}
+                            onZoomChange={setZoom}
+                            onCropComplete={onCropComplete}
+                            objectFit="contain"
+                        />
+                      </div>
+
+                      {/* Crop Controls - Fixed at bottom with safe area padding */}
+                      <div className="bg-gray-900 text-white px-4 pt-4 space-y-4 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 3.5rem)' }}>
+                        {/* Zoom Control */}
+                        <div>
+                          <label className="block text-sm mb-2">Zoom</label>
+                          <input
+                              type="range"
+                              min={1}
+                              max={3}
+                              step={0.1}
+                              value={zoom}
+                              onChange={(e) => setZoom(parseFloat(e.target.value))}
+                              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          />
+                        </div>
+
+                        {/* Rotate Button */}
+                        <button
+                            onClick={handleRotate}
+                            className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          <RotateCw className="w-5 h-5" />
+                          Rotate 90°
+                        </button>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-3 pb-4">
+                          <button
+                              onClick={handleCropCancel}
+                              className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors active:scale-95 font-semibold"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                              onClick={handleCropConfirm}
+                              className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-95 font-semibold"
+                          >
+                            Use Photo
                           </button>
                         </div>
-                    )}
-
-                    {/* Thank you message - VISIBLE TO EVERYONE */}
-                    <div className="text-center mt-6">
-                      <p className="text-sm text-gray-600">
-                        Thanks for using Shelf Scan! Let us know if you have any{' '}
-                        <a href="mailto:admin@shelfscan.xyz" className="text-indigo-600 hover:underline">
-                          comments or suggestions
-                        </a>!
-                      </p>
+                      </div>
                     </div>
-                    <div className="text-center mt-6">
-                      <a href="#"
-                         onClick={(e) => {
-                           e.preventDefault();
-                           setShowPrivacyModal(true)
-                         }}
-                         className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
-                         >
-                        Privacy Policy
-                      </a>
-                    </div>
-                  </div>
-                </div>
-            )}
-
-        {/* Crop Modal */}
-        {showCropModal && (
-            <div className="fixed inset-0 bg-black z-50 flex flex-col">
-              {/* Crop Header */}
-              <div className="bg-gray-900 text-white px-4 py-3 pt-safe flex justify-between items-center flex-shrink-0">
-                <button
-                    onClick={handleCropCancel}
-                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors active:scale-95"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <h3 className="text-lg font-semibold">Adjust Photo</h3>
-                <button
-                    onClick={handleCropConfirm}
-                    className="p-2 hover:bg-gray-800 rounded-lg transition-colors active:scale-95"
-                >
-                  <Check className="w-6 h-6 text-green-400" />
-                </button>
+                )}
               </div>
-
-              {/* Crop Area - Takes remaining space */}
-              <div className="flex-1 relative min-h-0 overflow-hidden">
-                <Cropper
-                    image={imageToCrop}
-                    crop={crop}
-                    zoom={zoom}
-                    rotation={rotation}
-                    aspect={undefined} // Free aspect ratio
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onCropComplete={onCropComplete}
-                    objectFit="contain"
-                />
-              </div>
-
-              {/* Crop Controls - Fixed at bottom with safe area padding */}
-              <div className="bg-gray-900 text-white px-4 pt-4 space-y-4 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 3.5rem)' }}>
-                {/* Zoom Control */}
-                <div>
-                  <label className="block text-sm mb-2">Zoom</label>
-                  <input
-                      type="range"
-                      min={1}
-                      max={3}
-                      step={0.1}
-                      value={zoom}
-                      onChange={(e) => setZoom(parseFloat(e.target.value))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                  />
-                </div>
-
-                {/* Rotate Button */}
-                <button
-                    onClick={handleRotate}
-                    className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <RotateCw className="w-5 h-5" />
-                  Rotate 90°
-                </button>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 pb-4">
-                  <button
-                      onClick={handleCropCancel}
-                      className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors active:scale-95 font-semibold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                      onClick={handleCropConfirm}
-                      className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-95 font-semibold"
-                  >
-                    Use Photo
-                  </button>
-                </div>
-              </div>
+              {/* Tab Bar - MUST be outside the scrolling container to stay fixed */}
+              <TabBar activeTab={activeTab} onTabChange={setActiveTab}/>
             </div>
         )}
-          </div>
-        </div>
-      )}
-
-        {/* Tab Bar - MUST be outside the scrolling container to stay fixed */}
-        <TabBar activeTab={activeTab} onTabChange={setActiveTab}/>
 
         {/* Modals - outside main container */}
         <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
@@ -1131,9 +1160,9 @@ function App() {
             book={selectedBook}
         />
         <PrivacyModal
-          isOpen={showPrivacyModal}
-          onClose={() => setShowPrivacyModal(false)}
-          />
+            isOpen={showPrivacyModal}
+            onClose={() => setShowPrivacyModal(false)}
+        />
         <PwChangeModal
             isOpen={showPwChangeModal}
             onClose={() => setShowPwChangeModal(false)}
@@ -1143,14 +1172,14 @@ function App() {
             onClose={handleCloseWelcome}
         />
         <DeleteAccountModal
-          isOpen={showDeleteAccountModal}
-          onClose={() => setShowDeleteAccountModal(false)}
-          onConfirmDelete={handleDeleteAccount}
-          userEmail={user?.email}
+            isOpen={showDeleteAccountModal}
+            onClose={() => setShowDeleteAccountModal(false)}
+            onConfirmDelete={handleDeleteAccount}
+            userEmail={user?.email}
         />
         <HelpButton />
-
       </>
   );
 }
+
 export default App;

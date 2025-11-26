@@ -192,10 +192,13 @@ function ReadingList({ isOpen, onClose }) {
 
 
   return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto px-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto mt-6 mb-4 pb-4 px-4">
         <div
-            className="relative bg-white rounded-2xl shadow-2xl w-[min(100vw-1.5rem,64rem)] max-h-[calc(100dvh-1.5rem-env(safe-area-inset-bottom))] sm:max-h-[calc(100dvh-3rem)-env(safe-area-inset-bottom)] flex flex-col overflow-hidden"
-
+            className="bg-white rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden flex flex-col"
+            style={{
+              marginTop: 'max(1rem, env(safe-area-inset-top))',
+              maxHeight: 'calc(100vh - 8rem)'
+            }}
         >
           {/* Header */}
           <div className="p-2 border-b border-gray-200">
