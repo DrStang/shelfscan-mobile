@@ -16,6 +16,9 @@ function ReadingList({ isOpen, onClose }) {
   const [stats, setStats] = useState(null);
   const [lastImportDate, setLastImportDate] = useState(null);
   const { user, session } = useAuth();
+  const platform = Capacitor.getPlatform();
+  const isAndroid = platform === 'android';
+  const isIOS = platform === 'ios';
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -230,27 +233,52 @@ function ReadingList({ isOpen, onClose }) {
                 Due to Goodreads restrictions, your library cannot be directly connected here and must be exported. Note because of this, changes to your library will not be automatically imported. We recommend re-importing your list every 2 weeks, or sooner if your library changes frequently.
               </p>
 
-              {/* UPDATED: New button to open in browser with clear instructions */}
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm font-medium text-blue-900 mb-2">📚 Step 1: Get Your Goodreads Export</p>
-                <button
-                    onClick={openGoodreadsExport}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
-                >
-                  <ExternalLink className="w-5 h-5" />
-                  Open Goodreads Export
-                </button>
-                <ol className="text-gray-600 space-y-1 ml-4 list-decimal text-xs">
-                  <li>Click the above export button, which will open Goodreads in your browser</li>
-                  <li>Click 'Export Library' on the Goodreads site</li>
-                  <li>Click the generated link titled 'Your export from...' (it may take a second)</li>
-                  <li>Your list will then download to your phone</li>
-                  <li>Return to this app and upload the list you just downloaded in step 2 below</li>
-                </ol>
-                {/*<p className="text-xs text-gray-600 mt-2">
-                  This will open Goodreads in your browser where you can download your library export CSV file.
-                </p>*/}
-              </div>
+              {isAndroid && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-medium text-blue-900 mb-2">📚 Step 1: Get Your Goodreads Export</p>
+                  <button
+                      onClick={openGoodreadsExport}
+                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
+                  >
+                    <ExternalLink className="w-5 h-5" />
+                    Open Goodreads Export
+                  </button>
+                  <ol className="text-gray-600 space-y-1 ml-4 list-decimal text-xs">
+                    <li>Click the above export button, which will open Goodreads in your browser</li>
+                    <li>Click 'Export Library' on the Goodreads site</li>
+                    <li>Click the generated link titled 'Your export from...' (it may take a second)</li>
+                    <li>Your list will then download to your phone</li>
+                    <li>Return to this app and upload the list you just downloaded in step 2 below</li>
+                  </ol>
+                  {/*<p className="text-xs text-gray-600 mt-2">
+                    This will open Goodreads in your browser where you can download your library export CSV file.
+                  </p>*/}
+                </div>
+              )}
+              {isIOS && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm font-medium text-blue-900 mb-2">📚 Step 1: Get Your Goodreads Export</p>
+                    <button
+                        onClick={openGoodreadsExport}
+                        className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                      Open Goodreads Export
+                    </button>
+                    <ol className="text-gray-600 space-y-1 ml-4 list-decimal text-xs">
+                      <li>Click the above export button, which will open Goodreads in your browser</li>
+                      <li>Click 'Export Library' on the Goodreads site</li>
+                      <li>Click the generated link titled 'Your export from...' (it may take a second)</li>
+                      <li>Click 'More...' on the window that pops up</li>
+                      <li>Click 'Save to Files' and choose a place to save your file (iCloud Drive is default)</li>
+                      <li>Your list will then download to your phone</li>
+                      <li>Return to this app and upload the list you just downloaded in step 2 below</li>
+                    </ol>
+                    {/*<p className="text-xs text-gray-600 mt-2">
+                    This will open Goodreads in your browser where you can download your library export CSV file.
+                  </p>*/}
+                  </div>
+              )}
 
               <div className="mb-2">
                 <p className="text-sm font-medium text-gray-700 mb-2">📤 Step 2: Upload Your List</p>

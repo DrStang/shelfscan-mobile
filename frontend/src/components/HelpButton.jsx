@@ -126,7 +126,7 @@ const HelpButton = () => {
                             </section>
 
                             {/* Goodreads Import */}
-
+                            {isAndroid && (
                                 <section>
                                     <h3 className="text-xl font-bold text-gray-800 mb-3">📚 Import Goodreads</h3>
                                     <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
@@ -145,6 +145,28 @@ const HelpButton = () => {
                                         </div>
                                     </div>
                                 </section>
+                            )}
+                            {isIOS && (
+                                <section>
+                                    <h3 className="text-xl font-bold text-gray-800 mb-3">📚 Import Goodreads</h3>
+                                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                                        <p className="text-sm text-emerald-800 mb-3">
+                                            Auto-highlight books you own when scanning!
+                                        </p>
+                                        <div className="space-y-2 text-sm text-emerald-700">
+                                            <ol className="ml-4 space-y-1 list-decimal">
+                                                <li>Click the above export button, which will open Goodreads in your browser</li>
+                                                <li>Click 'Export Library' on the Goodreads site</li>
+                                                <li>Click the generated link titled 'Your export from...' (it may take a second)</li>
+                                                <li>Click 'More...' on the window that pops up</li>
+                                                <li>Click 'Save to Files' and choose a place to save your file (iCloud Drive is default)</li>
+                                                <li>Your list will then download to your phone</li>
+                                                <li>Return to this app and upload the list you just downloaded in step 2 below</li>
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </section>
+                            )}
 
 
                             {/* Troubleshooting */}

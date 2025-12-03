@@ -685,11 +685,11 @@ function App() {
                                         <span className="text-3xl font-bold text-gray-800">
                                           {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
                                         </span>
-                                            {book.ratingsCount > 0 && (
+                                            {/*{book.ratingsCount > 0 && (
                                                 <p className="text-sm text-gray-600">
                                                   {book.ratingsCount.toLocaleString()} ratings
                                                 </p>
-                                            )}
+                                            )}*/}
                                           </div>
                                         </div>
                                       </div>
@@ -837,7 +837,7 @@ function App() {
                                           </div>
                                           {book.ratingsCount > 0 && (
                                               <span className="text-xs text-gray-500">
-                                        {book.ratingsCount.toLocaleString()}
+                                        ({book.ratingsCount.toLocaleString()} reviews)
                                       </span>
                                           )}
                                         </div>
