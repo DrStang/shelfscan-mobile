@@ -4,7 +4,6 @@ import { useAuth } from './AuthContext';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
-import i18n from "./utils/i18n";
 
 function ReadingList({ isOpen, onClose }) {
   const [readingList, setReadingList] = useState([]);
@@ -94,15 +93,18 @@ function ReadingList({ isOpen, onClose }) {
     }
   };
 
+  // NEW: Function to open Goodreads export in external browser
   const openGoodreadsExport = async () => {
     await Haptics.impact({ style: ImpactStyle.Light });
 
     if (Capacitor.isNativePlatform()) {
+      // On mobile, open in external browser (Chrome/Safari)
       await Browser.open({
         url: 'https://www.goodreads.com/review/import',
-        presentationStyle: 'popover'
+        presentationStyle: 'popover' // iOS only - on Android it always opens externally
       });
     } else {
+      // On web, open in new tab
       window.open('https://www.goodreads.com/review/import', '_blank', 'noopener,noreferrer');
     }
   };
@@ -154,7 +156,7 @@ function ReadingList({ isOpen, onClose }) {
 
   const handleClearList = async () => {
     await Haptics.impact({ style: ImpactStyle.Heavy });
-    if (!window.confirm(i18n.t('library.clearList'))) {
+    if (!window.confirm('Are you sure you want to clear your entire reading list? This cannot be undone.')) {
       return;
     }
 
@@ -177,7 +179,7 @@ function ReadingList({ isOpen, onClose }) {
         throw new Error(data.error || 'Failed to clear list');
       }
 
-      setSuccess(i18n.t('library.clearedSuccessfully'));
+      setSuccess('Reading list cleared successfully');
       await Haptics.notification({ type: NotificationType.Success });
       setReadingList([]);
       setFilteredBooks([]);
@@ -195,16 +197,17 @@ function ReadingList({ isOpen, onClose }) {
   return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto px-4">
         <div
-            className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-[min(100vw-1.5rem,64rem)] max-h-[calc(100dvh-1.5rem-env(safe-area-inset-bottom))] sm:max-h-[calc(100dvh-3rem)-env(safe-area-inset-bottom)] flex flex-col overflow-hidden"
+            className="relative bg-white rounded-2xl shadow-2xl w-[min(100vw-1.5rem,64rem)] max-h-[calc(100dvh-1.5rem-env(safe-area-inset-bottom))] sm:max-h-[calc(100dvh-3rem)-env(safe-area-inset-bottom)] flex flex-col overflow-hidden"
+
         >
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="p-2 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Book className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">{i18n.t('library.title')}</h2>
+                <Book className="w-6 h-6 text-indigo-600" />
+                <h2 className="text-2xl font-bold text-gray-800">{i18n.t('library.title')}</h2>
               </div>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2">
+              <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -213,79 +216,86 @@ function ReadingList({ isOpen, onClose }) {
           {/* Content */}
           <div className="p-6 overflow-y-auto flex-1">
             {/* Import Section */}
-            <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">
+            <div className="mb-6 p-4 bg-indigo-50 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 {i18n.t('library.import')}
                 {lastImportDate && (
-                    <span className="text-sm font-normal text-gray-600 dark:text-gray-400 block mt-1">
+                    <span className="text-sm font-normal text-gray-600 block mt-1">
                     {i18n.t('library.lastImported', { date: new Date(lastImportDate).toLocaleDateString()})}
+                      {/* Show reminder if import is older than 30 days */}
                       {new Date() - new Date(lastImportDate) > 14 * 24 * 60 * 60 * 1000 && (
-                          <span className="text-amber-600 dark:text-amber-400 ml-2">⚠️ {i18n.t('library.considerReimport')}</span>
+                          <span className="text-amber-600 ml-2">⚠️ {i18n.t('library.considerReimport')}</span>
                       )}
                   </span>
                 )}
               </h3>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
-                {i18n.t('library.goodreadsRestrictions')}
+              <p className="text-xs text-gray-600 mb-4">
+                Due to Goodreads restrictions, your library cannot be directly connected here and must be exported. Note because of this, changes to your library will not be automatically imported. We recommend re-importing your list every 2 weeks, or sooner if your library changes frequently.
               </p>
 
               {isAndroid && (
-                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">📚 {i18n.t('library.step1GetExport')}</p>
-                    <button
-                        onClick={openGoodreadsExport}
-                        className="w-full px-4 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 font-medium"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                      {i18n.t('library.openGoodreadsExport')}
-                    </button>
-                    <ol className="text-gray-600 dark:text-gray-400 space-y-1 ml-4 list-decimal text-xs mt-2">
-                      <li>{i18n.t('library.instructionClickExport')}</li>
-                      <li>{i18n.t('library.instructionClickExportLibrary')}</li>
-                      <li>{i18n.t('library.instructionClickGeneratedLink')}</li>
-                      <li>{i18n.t('library.instructionListWillDownload')}</li>
-                      <li>{i18n.t('library.instructionReturnToApp')}</li>
-                    </ol>
-                  </div>
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-medium text-blue-900 mb-2">📚 Step 1: Get Your Goodreads Export</p>
+                  <button
+                      onClick={openGoodreadsExport}
+                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
+                  >
+                    <ExternalLink className="w-5 h-5" />
+                    Open Goodreads Export
+                  </button>
+                  <ol className="text-gray-600 space-y-1 ml-4 list-decimal text-xs">
+                    <li>Click the above export button, which will open Goodreads in your browser</li>
+                    <li>Click 'Export Library' on the Goodreads site</li>
+                    <li>Click the generated link titled 'Your export from...' (it may take a second)</li>
+                    <li>Your list will then download to your phone</li>
+                    <li>Return to this app and upload the list you just downloaded in step 2 below</li>
+                  </ol>
+                  {/*<p className="text-xs text-gray-600 mt-2">
+                    This will open Goodreads in your browser where you can download your library export CSV file.
+                  </p>*/}
+                </div>
               )}
               {isIOS && (
-                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">📚 {i18n.t('library.step1GetExport')}</p>
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm font-medium text-blue-900 mb-2">📚 Step 1: Get Your Goodreads Export</p>
                     <button
                         onClick={openGoodreadsExport}
-                        className="w-full px-4 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 font-medium"
+                        className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
                     >
                       <ExternalLink className="w-5 h-5" />
-                      {i18n.t('library.openGoodreadsExport')}
+                      Open Goodreads Export
                     </button>
-                    <ol className="text-gray-600 dark:text-gray-400 space-y-1 ml-4 list-decimal text-xs mt-2">
-                      <li>{i18n.t('library.instructionClickExport')}</li>
-                      <li>{i18n.t('library.instructionClickExportLibrary')}</li>
-                      <li>{i18n.t('library.instructionClickGeneratedLink')}</li>
-                      <li>{i18n.t('library.instructionClickMore')}</li>
-                      <li>{i18n.t('library.instructionSaveToFiles')}</li>
-                      <li>{i18n.t('library.instructionListWillDownload')}</li>
-                      <li>{i18n.t('library.instructionReturnToApp')}</li>
+                    <ol className="text-gray-600 space-y-1 ml-4 list-decimal text-xs">
+                      <li>Click the above export button, which will open Goodreads in your browser</li>
+                      <li>Click 'Export Library' on the Goodreads site</li>
+                      <li>Click the generated link titled 'Your export from...' (it may take a second)</li>
+                      <li>Click 'More...' on the window that pops up</li>
+                      <li>Click 'Save to Files' and choose a place to save your file (iCloud Drive is default)</li>
+                      <li>Your list will then download to your phone</li>
+                      <li>Return to this app and upload the list you just downloaded in step 2 below</li>
                     </ol>
+                    {/*<p className="text-xs text-gray-600 mt-2">
+                    This will open Goodreads in your browser where you can download your library export CSV file.
+                  </p>*/}
                   </div>
               )}
 
               <div className="mb-2">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">📤 {i18n.t('library.step2UploadList')}</p>
+                <p className="text-sm font-medium text-gray-700 mb-2">📤 Step 2: Upload Your List</p>
               </div>
 
               <div className="flex gap-3">
                 <label className="flex-1 cursor-pointer">
-                  <div className="px-4 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors flex items-center justify-center gap-2">
+                  <div className="px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
                     {uploading ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          {i18n.t('library.importing')}
+                          Importing...
                         </>
                     ) : (
                         <>
                           <Upload className="w-5 h-5" />
-                          {i18n.t('library.upload')}
+                          Upload
                         </>
                     )}
                   </div>
@@ -302,7 +312,7 @@ function ReadingList({ isOpen, onClose }) {
                     <button
                         onClick={handleClearList}
                         disabled={loading}
-                        className="px-4 py-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center gap-2"
+                        className="px-4 py-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2"
                     >
                       <Trash2 className="w-5 h-5" />
                       {i18n.t('library.clear')}
@@ -313,19 +323,19 @@ function ReadingList({ isOpen, onClose }) {
 
             {/* Messages */}
             {error && (
-                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-semibold text-red-800 dark:text-red-300">Error</p>
-                    <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+                    <p className="font-semibold text-red-800">Error</p>
+                    <p className="text-red-700 text-sm">{error}</p>
                   </div>
                 </div>
             )}
 
             {success && (
-                <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-green-700 dark:text-green-300">{success}</p>
+                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-green-700">{success}</p>
                 </div>
             )}
 
@@ -338,13 +348,11 @@ function ReadingList({ isOpen, onClose }) {
                         handleFilterClick('all')
                       }}
                       className={`rounded-lg p-4 text-center transition-all hover:shadow-md ${
-                          activeFilter === 'all'
-                              ? 'ring-2 ring-indigo-500 bg-indigo-50 dark:bg-indigo-900/50'
-                              : 'bg-gray-50 dark:bg-gray-700'
+                          activeFilter === 'all' ? 'ring-2 ring-indigo-500 bg-indigo-50' : 'bg-gray-50'
                       }`}
                   >
-                    <div className="text-2xl font-bold text-gray-800 dark:text-white">{stats.total}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{i18n.t('library.totalBooks')}</div>
+                    <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+                    <div className="text-sm text-gray-600">{i18n.t('library.totalBooks')}</div>
                   </button>
 
                   <button
@@ -353,13 +361,11 @@ function ReadingList({ isOpen, onClose }) {
                         handleFilterClick('read')
                       }}
                       className={`rounded-lg p-4 text-center transition-all hover:shadow-md ${
-                          activeFilter === 'read'
-                              ? 'ring-2 ring-green-500 bg-green-100 dark:bg-green-900/50'
-                              : 'bg-green-50 dark:bg-green-900/30'
+                          activeFilter === 'read' ? 'ring-2 ring-green-500 bg-green-100' : 'bg-green-50'
                       }`}
                   >
-                    <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats.read}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{i18n.t('library.read')}</div>
+                    <div className="text-2xl font-bold text-green-700">{stats.read}</div>
+                    <div className="text-sm text-gray-600">Read</div>
                   </button>
 
                   <button
@@ -368,13 +374,11 @@ function ReadingList({ isOpen, onClose }) {
                         handleFilterClick('currently-reading')
                       }}
                       className={`rounded-lg p-4 text-center transition-all hover:shadow-md ${
-                          activeFilter === 'currently-reading'
-                              ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/50'
-                              : 'bg-blue-50 dark:bg-blue-900/30'
+                          activeFilter === 'currently-reading' ? 'ring-2 ring-blue-500 bg-blue-100' : 'bg-blue-50'
                       }`}
                   >
-                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{stats.currentlyReading}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{i18n.t('library.reading')}</div>
+                    <div className="text-2xl font-bold text-blue-700">{stats.currentlyReading}</div>
+                    <div className="text-sm text-gray-600">{i18n.t('library.reading')}</div>
                   </button>
 
                   <button
@@ -383,21 +387,19 @@ function ReadingList({ isOpen, onClose }) {
                         handleFilterClick('to-read')
                       }}
                       className={`rounded-lg p-4 text-center transition-all hover:shadow-md ${
-                          activeFilter === 'to-read'
-                              ? 'ring-2 ring-amber-500 bg-amber-100 dark:bg-amber-900/50'
-                              : 'bg-amber-50 dark:bg-amber-900/30'
+                          activeFilter === 'to-read' ? 'ring-2 ring-amber-500 bg-amber-100' : 'bg-amber-50'
                       }`}
                   >
-                    <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{stats.toRead}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{i18n.t('library.toRead')}</div>
+                    <div className="text-2xl font-bold text-amber-700">{stats.toRead}</div>
+                    <div className="text-sm text-gray-600">{i18n.t('library.toRead')}</div>
                   </button>
 
-                  <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-700 dark:text-purple-400 flex items-center justify-center gap-1">
-                      <Star className="w-5 h-5 fill-purple-700 dark:fill-purple-400" />
+                  <div className="bg-purple-50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-purple-700 flex items-center justify-center gap-1">
+                      <Star className="w-5 h-5 fill-purple-700" />
                       {stats.avgRating}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{i18n.t('library.avgRating')}</div>
+                    <div className="text-sm text-gray-600">{i18n.t('library.avgRating')}</div>
                   </div>
                 </div>
             )}
@@ -405,19 +407,19 @@ function ReadingList({ isOpen, onClose }) {
             {/* Reading List */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+                  <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
                 </div>
             ) : readingList.length === 0 ? (
                 <div className="text-center py-12">
-                  <Book className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">{i18n.t('library.noBooksYet')}</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{i18n.t('library.uploadToStart')}</p>
+                  <Book className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No books in your reading list yet.</p>
+                  <p className="text-sm text-gray-400 mt-2">Upload your Goodreads CSV to get started!</p>
                 </div>
             ) : (
                 <div>
                   {activeFilter !== 'all' && (
-                      <div className="mb-4 flex items-center justify-between bg-indigo-50 dark:bg-indigo-900/30 px-4 py-2 rounded-lg">
-                        <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                      <div className="mb-4 flex items-center justify-between bg-indigo-50 px-4 py-2 rounded-lg">
+                        <p className="text-sm text-indigo-700">
                           Showing {filteredBooks.length} {
                           activeFilter === 'read' ? 'read' :
                               activeFilter === 'currently-reading' ? 'currently reading' :
@@ -426,9 +428,9 @@ function ReadingList({ isOpen, onClose }) {
                         </p>
                         <button
                             onClick={() => handleFilterClick('all')}
-                            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
+                            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
                         >
-                          {i18n.t('scan.clear')}
+                          Clear filter
                         </button>
                       </div>
                   )}
@@ -436,31 +438,29 @@ function ReadingList({ isOpen, onClose }) {
                   <div className="max-h-96 overflow-y-auto">
                     <div className="space-y-2">
                       {filteredBooks.map((book, index) => (
-                          <div key={index} className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors bg-white dark:bg-gray-800">
+                          <div key={index} className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:border-indigo-300 transition-colors">
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-gray-800 dark:text-white truncate">{book.title}</h4>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{book.author}</p>
+                              <h4 className="font-semibold text-gray-800 truncate">{book.title}</h4>
+                              <p className="text-sm text-gray-600 truncate">{book.author}</p>
                               <div className="flex items-center gap-3 mt-1">
                                 {book.my_rating > 0 && (
                                     <div className="flex items-center gap-1">
                                       <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{book.my_rating}</span>
+                                      <span className="text-sm font-medium">{book.my_rating}</span>
                                     </div>
                                 )}
                                 {book.exclusive_shelf && (
                                     <span className={`text-xs px-2 py-1 rounded ${
-                                        book.exclusive_shelf === 'read'
-                                            ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'
-                                            : book.exclusive_shelf === 'currently-reading'
-                                                ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400'
-                                                : 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400'
+                                        book.exclusive_shelf === 'read' ? 'bg-green-100 text-green-700' :
+                                            book.exclusive_shelf === 'currently-reading' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-amber-100 text-amber-700'
                                     }`}>
                               {book.exclusive_shelf === 'currently-reading' ? 'Reading' :
                                   book.exclusive_shelf === 'to-read' ? 'To Read' : 'Read'}
                             </span>
                                 )}
                                 {book.isbn13 && (
-                                    <span className="text-xs text-gray-400 dark:text-gray-500">ISBN: {book.isbn13}</span>
+                                    <span className="text-xs text-gray-400">ISBN: {book.isbn13}</span>
                                 )}
                               </div>
                             </div>
@@ -473,12 +473,12 @@ function ReadingList({ isOpen, onClose }) {
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <div className="p-6 border-t border-gray-200 bg-gray-50">
             <button
                 onClick={onClose}
-                className="w-full px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+                className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
-              {i18n.t('common.close')}
+              Close
             </button>
           </div>
         </div>

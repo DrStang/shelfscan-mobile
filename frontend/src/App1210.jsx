@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Upload, WifiOff, Download, ScanBarcode as Barcode, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, ChevronRight, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
+import { Upload, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, ChevronRight, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import AuthModal from './AuthModal';
 import ReadingList from './ReadingList';
@@ -26,24 +26,6 @@ import getCroppedImg from './cropImage';
 import DeleteAccountModal from "./components/DeleteAccountModal";
 import SwipeableScanItem from "./components/SwipeableScanItem";
 import PrivacyModal from './PrivacyModal';
-import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
-import i18n from "./utils/i18n";
-import BarcodeScanner from './components/BarcodeScanner';
-import ThemeToggle from './components/ThemeToggle';
-import LanguageSelector from './components/LanguageSelector';
-import { Preferences } from '@capacitor/preferences';
-import ScanDetailModal from './components/ScanDetailModal';
-import ExportButton from "./components/ExportButton";
-import BulkExportModal from './components/BulkExportModal';
-import {
-  queueScanForSync,
-  processPendingScans,
-  isOnline,
-  getPendingScans,
-  cacheBooks
-} from "./utils/offlineCache";
-
-i18n.init();
 
 function App() {
   const [image, setImage] = useState(null);
@@ -73,17 +55,8 @@ function App() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [isAppReady, setIsAppReady] = useState(!Capacitor.isNativePlatform());
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  const [isOffline, setIsOffline] = useState(!isOnline());
-  const [pendingScans, setPendingScans] = useState([]);
-  const [syncing, setSyncing] = useState(false);
-  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const [showScanDetailModal, setShowScanDetailModal] = useState(false);
-  const [selectedScan, setSelectedScan] = useState(null);
-  const [lastScanDate, setLastScanDate] = useState(null);
-  const [showBulkExport, setShowBulkExport] = useState(false);
 
   const {user, session, signOut, loading: authLoading} = useAuth();
-  const { isDark } = useTheme();
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 
@@ -100,25 +73,27 @@ function App() {
   useEffect(() => {
     const setupStatusBar = async () => {
       if (Capacitor.isNativePlatform()) {
-        // Set status bar style based on theme
-        await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+        // Set status bar style
+        await StatusBar.setStyle({style: Style.Light});
+
         // Set status bar background color to match your header
-        await StatusBar.setBackgroundColor({ color: isDark ? '#1f2937' : '#ffffff' });
+        await StatusBar.setBackgroundColor({color: '#ffffff'});
+
         // Make content go under status bar (then use safe area insets)
         await StatusBar.setOverlaysWebView({overlay: true});
       }
     };
 
     setupStatusBar();
-  }, [isDark]);
+  }, []);
 
   useEffect(() => {
     const initializeApp = async () => {
       if (Capacitor.isNativePlatform()) {
         try {
           // Setup StatusBar
-          await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
-          await StatusBar.setBackgroundColor({ color: isDark ? '#1f2937' : '#ffffff' });
+          await StatusBar.setStyle({style: Style.Light});
+          await StatusBar.setBackgroundColor({color: '#ffffff'});
           await StatusBar.setOverlaysWebView({overlay: true});
 
           // Small delay to let safe areas calculate
@@ -133,7 +108,7 @@ function App() {
     };
 
     initializeApp();
-  }, [isDark]);
+  }, []);
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
@@ -141,134 +116,6 @@ function App() {
       setShowWelcome(true);
     }
   }, []);
-
-// COMPLETE REPLACEMENT for your online/offline useEffect in App.jsx
-// Find your existing useEffect that handles 'online' and 'offline' events
-// (around lines 137-169) and replace the ENTIRE thing with this:
-
-  useEffect(() => {
-    const handleOnline = async () => {
-      console.log('📶 Coming back online...');
-      setIsOffline(false);
-      await Haptics.notification({ type: NotificationType.Success });
-
-      const pending = await getPendingScans();
-      console.log(`Found ${pending.length} pending scans to process`);
-
-      if (pending.length > 0) {
-        setSyncing(true);
-
-        let lastSuccessfulResult = null;
-        let processedCount = 0;
-        let failedCount = 0;
-
-        // Process each pending scan
-        for (let i = 0; i < pending.length; i++) {
-          const scan = pending[i];
-          console.log(`Processing scan ${i + 1}/${pending.length}`, scan.id);
-
-          try {
-            // Call the API directly with the queued image data
-            const response = await fetch(`${API_URL}/api/scan`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                image: scan.image,
-                userId: scan.userId
-              })
-            });
-
-            if (!response.ok) {
-              throw new Error(`Server error (${response.status})`);
-            }
-
-            const result = await response.json();
-
-            if (result.success && result.books) {
-              console.log(`✅ Scan ${scan.id} processed successfully, got ${result.books?.length} books`);
-              lastSuccessfulResult = result;
-              processedCount++;
-
-              // Cache books for offline access
-              await cacheBooks(result.books);
-
-              // Save scan for logged-in users
-              if (scan.userId && user) {
-                try {
-                  await supabase
-                      .from('scans')
-                      .insert({
-                        user_id: user.id,
-                        books: result.books,
-                        created_at: new Date().toISOString()
-                      });
-                } catch (saveErr) {
-                  console.error('Error saving synced scan:', saveErr);
-                }
-              }
-
-              // Remove this scan from pending
-              const currentPending = await getPendingScans();
-              const filtered = currentPending.filter(p => p.id !== scan.id);
-              await Preferences.set({
-                key: 'pending_scans',
-                value: JSON.stringify(filtered)
-              });
-            }
-          } catch (err) {
-            console.error(`❌ Failed to process queued scan ${scan.id}:`, err);
-            failedCount++;
-          }
-        }
-
-        setSyncing(false);
-
-        // Update pending scans count
-        const remainingPending = await getPendingScans();
-        setPendingScans(remainingPending);
-
-        // Show the results from the last successful scan in the UI
-        if (lastSuccessfulResult && lastSuccessfulResult.books) {
-          console.log(`📚 Displaying ${lastSuccessfulResult.books.length} books from synced scan`);
-          setBooks(lastSuccessfulResult.books);
-          setMatchedCount(lastSuccessfulResult.matchedInReadingList || 0);
-          await Haptics.notification({ type: NotificationType.Success });
-        }
-
-        // Show sync summary
-        if (processedCount > 0) {
-          alert(i18n.t('offline.syncComplete', { count: processedCount }));
-        }
-        if (failedCount > 0) {
-          console.warn(`${failedCount} scans failed to process`);
-        }
-      }
-    };
-
-    const handleOffline = () => {
-      console.log('📴 Going offline...');
-      setIsOffline(true);
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [user, API_URL]);
-
-  useEffect(() => {
-    const loadPending = async () => {
-      const pending = await getPendingScans();
-      setPendingScans(pending);
-    };
-    loadPending();
-  }, []);
-
 
   const handleCloseWelcome = () => {
     setShowWelcome(false);
@@ -284,7 +131,7 @@ function App() {
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', {ascending: false})
-          .limit(50);
+          .limit(10);
 
       if (error) throw error;
       setScanHistory(data || []);
@@ -324,12 +171,14 @@ function App() {
 
   const processImageFile = (file) => {
     if (file.size > 10 * 1024 * 1024) {
-      setError('Image size must be less than 10MB');
+      setError('Please try a smaller image');
+      setIsNetworkError(false);
       return;
     }
 
     if (!file.type.startsWith('image/')) {
-      setError('Please upload a valid image file');
+      setError('Please upload a valid image');
+      setIsNetworkError(false);
       return;
     }
 
@@ -342,9 +191,46 @@ function App() {
       setIsNetworkError(false);
     };
     reader.onerror = () => {
-      setError('Failed to read image file');
+      setError('Something went wrong. Please try again.');
+      setIsNetworkError(false);
     };
     reader.readAsDataURL(file);
+  };
+  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleCropConfirm = async () => {
+    try {
+      const croppedImage = await getCroppedImg(
+          imageToCrop,
+          croppedAreaPixels,
+          rotation
+      );
+      setImage(croppedImage);
+      setShowCropModal(false);
+      setImageToCrop(null);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+      setCroppedAreaPixels(null);
+    } catch (e) {
+      console.error('Error while croping image:', e);
+      setError('Failed to crop image');
+    }
+  };
+
+  const handleCropCancel = () => {
+    setShowCropModal(false);
+    setImageToCrop(null);
+    setCrop({ x: 0, y: 0 });
+    setRotation(0);
+    setZoom(1);
+    setCroppedAreaPixels(null);
+  };
+
+  const handleRotate = () => {
+    setRotation((prev) => (prev + 90) % 360);
   };
 
   const scanBooks = async () => {
@@ -357,26 +243,6 @@ function App() {
     setBooks([]);
     setMatchedCount(0);
 
-    // Check if offline
-    if (!isOnline()) {
-      // Queue for later sync
-      await queueScanForSync({
-        id: Date.now().toString(),
-        image: image,
-        userId: user?.id,
-        timestamp: new Date().toISOString(),
-        status: 'pending'
-      });
-
-      const pending = await getPendingScans();
-      setPendingScans(pending);
-
-      setError(i18n.t('offline.scanQueued'));
-      setLoading(false);
-      await Haptics.notification({type: NotificationType.Warning});
-      return;
-    }
-
     try {
       const response = await fetch(`${API_URL}/api/scan`, {
         method: 'POST',
@@ -388,8 +254,9 @@ function App() {
           userId: user?.id
         })
       }).catch(err => {
+        // Network error - can't reach server
         setIsNetworkError(true);
-        throw new Error(`Cannot connect to backend at ${API_URL}. Make sure the backend server is running.`);
+        throw new Error('Check your network connection');
       });
 
       let data;
@@ -399,29 +266,24 @@ function App() {
         try {
           data = await response.json();
         } catch (jsonError) {
-          throw new Error('Backend returned invalid JSON. Check backend logs for errors.');
+          throw new Error('Something went wrong. Please try again.');
         }
       } else {
-        const text = await response.text();
-        throw new Error(`Backend error: ${text.substring(0, 200)}`);
+        throw new Error('Something went wrong. Please try again.');
       }
 
       if (!response.ok) {
         if (response.status === 429) {
-          throw new Error('Too many requests. Please wait a few minutes and try again.');
+          throw new Error('You\'ve scanned too many images. Please try again in a few minutes.');
         }
 
-        throw new Error(data.error || `Server error (${response.status})`);
+        throw new Error(data.error || 'Something went wrong. Please try again.');
       }
 
       if (data.success && data.books) {
         setBooks(data.books);
-        setLastScanDate(new Date());
         setMatchedCount(data.matchedInReadingList || 0);
         await Haptics.notification({type: NotificationType.Success});
-
-        // Cache books for offline access
-        await cacheBooks(data.books);
 
         // Auto-save scan for logged-in users
         if (user) {
@@ -432,53 +294,17 @@ function App() {
           setError(`Found ${data.totalFound} books, but could only get ratings for ${data.totalProcessed}`);
         }
       } else {
-        throw new Error('Unexpected response from server');
+        throw new Error('Something went wrong. Please try again.');
       }
 
     } catch (err) {
       console.error('Scan error:', err);
-      setError(err.message || 'An error occurred while scanning books');
+      setError(err.message || 'Something went wrong. Please try again.');
       await Haptics.notification({type: NotificationType.Error});
     } finally {
       setLoading(false);
     }
   };
-
-  const processSingleScan = async (scanData) => {
-    const imageToProcess = scanData.image?.image || scanData.image;
-    const userIdToUse = scanData.image?.userId || scanData.userId || user?.id;
-
-    try {
-      const response = await fetch(`${API_URL}/api/scan`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image: imageToProcess,
-          userId: userIdToUse,
-        })
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error (${response.status})`);
-      }
-      const data = await response.json();
-
-      if (data.success && data.books) {
-        await cacheBooks(data.books);
-        if (user) {
-          await saveScan(data.books);
-        }
-        return data;
-      }
-      throw new Error('Unexpected response from server');
-    } catch (err) {
-      console.error('Process scan error:', err);
-      throw err;
-    }
-  };
-
   const handleSignOut = async () => {
     await signOut();
     setShowHistory(false);
@@ -489,43 +315,13 @@ function App() {
       : books;
 
   const openLinkModal = (bookData) => {
+    console.log("Opening modal for book:", bookData); // <--- ADD THIS LINE FOR TESTING
     setSelectedBook(bookData);
     setShowLinkModal(true);
   };
-
   const openDescriptModal = (bookData) => {
     setSelectedBook(bookData);
     setShowDescriptModal(true);
-  };
-
-  const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
-    setCroppedAreaPixels(croppedAreaPixels);
-  }, []);
-
-  const handleCropConfirm = async () => {
-    try {
-      const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels, rotation);
-      setImage(croppedImage);
-      setShowCropModal(false);
-      setImageToCrop(null);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-      setRotation(0);
-    } catch (e) {
-      console.error('Error cropping image:', e);
-    }
-  };
-
-  const handleCropCancel = () => {
-    setShowCropModal(false);
-    setImageToCrop(null);
-    setCrop({ x: 0, y: 0 });
-    setZoom(1);
-    setRotation(0);
-  };
-
-  const handleRotate = () => {
-    setRotation((prev) => (prev + 90) % 360);
   };
 
   const handleDeleteAccount = async () => {
@@ -550,14 +346,13 @@ function App() {
       await signOut();
       setShowDeleteAccountModal(false);
 
-      alert(i18n.t('account.scheduledForDeletion'));
+      alert('Your account has been scheduled for deletion. All data will be permanently removed.');
 
     } catch (err) {
       console.error('Delete account error:', err);
       throw err;
     }
   };
-
   const handleDeleteScan = async (scanId) => {
     try {
       const token = session?.access_token;
@@ -575,10 +370,14 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || i18n.t('error.failedToDeleteScan'));
+        throw new Error(data.error || 'Failed to delete scan');
       }
 
+      // Remove the scan from local state
       setScanHistory(prevHistory => prevHistory.filter(scan => scan.id !== scanId));
+
+      // Optional: Show success feedback
+      console.log('Scan deleted successfully');
 
       if (Capacitor.isNativePlatform()) {
         await Haptics.notification({ type: NotificationType.Success });
@@ -586,21 +385,10 @@ function App() {
 
     } catch (error) {
       console.error('Error deleting scan:', error);
-      alert(i18n.t('error.failedToDeleteScan'));
+      alert('Failed to delete scan. Please try again.');
       throw error;
     }
   };
-
-  const handleViewScanDetail = (scan) => {
-    setSelectedScan(scan);
-    setShowScanDetailModal(true);
-  };
-
-  const handleViewBookFromDetail = (book) => {
-    setShowScanDetailModal(false);
-    setSelectedBook(book);
-    setShowLinkModal(true);
-  }
 
   const takeNativePhoto = async () => {
     await Haptics.impact({style: ImpactStyle.Light});
@@ -614,6 +402,7 @@ function App() {
         webUseInput: false
       });
 
+      // photo.dataUrl is already in base64 format!
       setImageToCrop(photo.dataUrl);
       setShowCropModal(true);
       setBooks([]);
@@ -622,7 +411,7 @@ function App() {
     } catch (err) {
       if (err.message !== 'User cancelled photos app') {
         console.error('Camera error:', err);
-        setError(i18n.t('error.somethingWentWrong'));
+        setError('Something went wrong. Please try again.');
         setIsNetworkError(false);
       }
     } finally {
@@ -630,6 +419,7 @@ function App() {
     }
   };
 
+// Add this function in your App component
   const shareBook = async (book) => {
     await Haptics.impact({ style: ImpactStyle.Light });
 
@@ -644,49 +434,28 @@ function App() {
       console.log('Share cancelled or failed:', err);
     }
   };
-
   const handleRefresh = async () => {
     await Haptics.impact({ style: ImpactStyle.Medium });
     await loadScanHistory();
   };
-
   const { pulling, pullDistance } = usePullToRefresh(handleRefresh);
+
 
   const topThreeBooks = displayBooks.slice(0, 3);
 
   return (
       <>
         <DeepLinkHandler/>
-        {isOffline && (
-            <div className="bg-orange-500 text-white px-4 py-2 text-center text-sm">
-              <div className="flex items-center justify-center gap-2">
-                <WifiOff className="w-4 h-4" />
-                <span>{i18n.t('offline.description')}</span>
-                {pendingScans.length > 0 && (
-                    <span className="ml-2 bg-orange-600 px-2 py-1 rounded-full">
-                      {i18n.t('offline.pendingScans', { count: pendingScans.length})}
-                    </span>
-                )}
-              </div>
-            </div>
-        )}
-        {syncing && (
-            <div className="bg-blue-500 text-white px-4 py-2 text-center text-sm">
-              <div className="flex items-center justify-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>{i18n.t('offline.processing')}</span>
-              </div>
-            </div>
-        )}
         {!isAppReady ? (
-            <div className="h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <div className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
               <div className="text-center">
-                <Loader2 className="w-12 h-12 text-indigo-600 dark:text-indigo-400 animate-spin mx-auto mb-4"/>
-                <p className="text-gray-600 dark:text-gray-300">Loading Shelf Scan...</p>
+                <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mx-auto mb-4"/>
+                <p className="text-gray-600">Loading Shelf Scan...</p>
               </div>
             </div>
         ) : (
-            <div className="fixed inset-0 bg-gray-50 dark:bg-gray-900 flex flex-col">
+            <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+              {/*style={{ paddingTop: 'env(safe-area-inset-top)' }}>*/}
               <div className="flex-1 overflow-hidden pb-16">
                 {/* SCAN TAB */}
                 {activeTab === 'scan' && (
@@ -696,27 +465,31 @@ function App() {
                            overscrollBehavior: 'contain'
                          }}>
                       <div className="max-w-6xl mx-auto p-8 pb-8 min-h-full">
+                        {/*style={{ paddingTop: 'max(5rem, env(safe-area-inset-top))' }}>*/}
+                        {/* Your existing scan content - keep all of it */}
                         {/* Description text */}
                         <div className="text-center mb-6 sm:mb-8">
-                          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">{i18n.t('scan.description')}</p>
-                          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 px-4">{i18n.t('scan.loginDescription')}</p>
+                          <p className="text-sm sm:text-base text-gray-600 px-4">Upload a photo of book spines to find the
+                            highest-rated books.</p>
+                          <p className="text-sm sm:text-base text-gray-600 px-4">Optionally register/sign-in to store your
+                            scan history and to see if a scanned book is in your Goodreads reading list!</p>
 
                           {savingScan && (
-                              <div className="mt-2 text-sm text-indigo-600 dark:text-indigo-400">
-                                💾 {i18n.t('status.savingScan')}
+                              <div className="mt-2 text-sm text-indigo-600">
+                                💾 Saving scan to your library...
                               </div>
                           )}
                         </div>
 
                         {/* Match notification */}
                         {user && matchedCount > 0 && (
-                            <div className="mt-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-lg p-4 mb-8">
+                            <div className="mt-4 bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-8">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                  <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400"/>
-                                  <span className="font-semibold text-emerald-800 dark:text-emerald-200">
-                                    {i18n.t('scan.foundFromList', { count: matchedCount})}
-                                  </span>
+                                  <BookOpen className="w-5 h-5 text-emerald-600"/>
+                                  <span className="font-semibold text-emerald-800">
+                          Found {matchedCount} book{matchedCount !== 1 ? 's' : ''} from your reading list!
+                        </span>
                                 </div>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                   <input
@@ -725,24 +498,26 @@ function App() {
                                       onChange={(e) => setShowOnlyMatches(e.target.checked)}
                                       className="w-4 h-4 text-emerald-600 rounded"
                                   />
-                                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{i18n.t('scan.showOnlyMyBooks')}</span>
+                                  <span className="text-sm font-medium text-emerald-700">Show only my books</span>
                                 </label>
                               </div>
                             </div>
                         )}
 
-                        {/* Upload area */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
+                        {/* Upload area - your existing code */}
+                        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+                          {/* Keep all your existing upload/camera UI */}
                           <div className="flex flex-col items-center gap-4">
                             <label className="w-full cursor-pointer">
-                              <div className="border-4 border-dashed border-indigo-200 dark:border-indigo-700 rounded-lg p-12 text-center hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors">
+                              <div
+                                  className="border-4 border-dashed border-indigo-200 rounded-lg p-12 text-center hover:border-indigo-400 transition-colors">
                                 {image ? (
                                     <img src={image} alt="Uploaded books" className="max-h-96 mx-auto rounded-lg"/>
                                 ) : (
                                     <div className="flex flex-col items-center gap-3">
-                                      <Upload className="w-16 h-16 text-indigo-400 dark:text-indigo-500"/>
-                                      <p className="text-lg text-gray-600 dark:text-gray-300">{i18n.t('upload.clickToUpload')}</p>
-                                      <p className="text-sm text-gray-400 dark:text-gray-500">{i18n.t('upload.fileLimit')}</p>
+                                      <Upload className="w-16 h-16 text-indigo-400"/>
+                                      <p className="text-lg text-gray-600">Click to upload or take a photo</p>
+                                      <p className="text-sm text-gray-400">JPG, PNG up to 10MB</p>
                                     </div>
                                 )}
                               </div>
@@ -755,31 +530,20 @@ function App() {
                             </label>
 
                             {!image && (
-                                <div className="w-full max-w-md space-y-3">
-                                  {/* Primary row: Take Photo and Scan Barcode */}
-                                  <div className="flex gap-3">
-                                    <button
-                                        onClick={takeNativePhoto}
-                                        className="flex-1 px-4 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700 dark:hover:bg-indigo-600 flex items-center justify-center gap-2 text-sm sm:text-base"
-                                    >
-                                      <Camera className="w-5 h-5 flex-shrink-0"/>
-                                      <span className="whitespace-nowrap">{i18n.t('scan.takePhoto')}</span>
-                                    </button>
+                                <div className="flex gap-3 w-full max-w-md">
+                                  <button
+                                      onClick={takeNativePhoto}
+                                      className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700 flex items-center justify-center gap-2"
+                                  >
+                                    <Camera className="w-5 h-5"/>
+                                    Take Photo
+                                  </button>
 
-                                    {/*<button
-                                        onClick={() => setShowBarcodeScanner(true)}
-                                        className="flex-1 px-4 py-3 bg-green-600 dark:bg-green-500 text-white rounded-full font-semibold hover:bg-green-700 dark:hover:bg-green-600 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-                                    >
-                                      <Barcode className="w-5 h-5 flex-shrink-0"/>
-                                      <span className="whitespace-nowrap">{i18n.t('scan.scanBarcode')}</span>
-                                    </button>*/}
-                                  </div>
-
-                                  {/* Secondary row: Upload File */}
-                                  <label className="block cursor-pointer">
-                                    <div className="w-full px-4 py-3 bg-gray-600 dark:bg-gray-700 text-white rounded-full font-semibold hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base">
-                                      <Upload className="w-5 h-5 flex-shrink-0"/>
-                                      <span>{i18n.t('scan.uploadFile')}</span>
+                                  <label className="flex-1 cursor-pointer">
+                                    <div
+                                        className="px-6 py-3 bg-gray-600 text-white rounded-full font-semibold hover:bg-gray-700 transition-colors flex items-center justify-center gap-2">
+                                      <Upload className="w-5 h-5"/>
+                                      Upload File
                                     </div>
                                     <input
                                         type="file"
@@ -796,17 +560,17 @@ function App() {
                                   <button
                                       onClick={scanBooks}
                                       disabled={loading}
-                                      className="px-8 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-full font-semibold hover:bg-indigo-700 dark:hover:bg-indigo-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95 transition-transform"
+                                      className="px-8 py-3 bg-indigo-600 text-white rounded-full font-semibold hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 active:scale-95 transition-transform"
                                   >
                                     {loading ? (
                                         <>
                                           <Loader2 className="w-5 h-5 animate-spin"/>
-                                          {i18n.t('scan.scanning')}
+                                          Scanning Books...
                                         </>
                                     ) : (
                                         <>
                                           <Book className="w-5 h-5"/>
-                                          {i18n.t('scan.scanRateBooks')}
+                                          Scan & Rate Books
                                         </>
                                     )}
                                   </button>
@@ -818,16 +582,16 @@ function App() {
                                         setError('');
                                       }}
                                       disabled={loading}
-                                      className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-transform active:scale-95"
+                                      className="px-6 py-3 bg-gray-200 text-gray-700 rounded-full font-semibold hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-transform active:scale-95"
                                   >
-                                    {i18n.t('scan.clear')}
+                                    Clear
                                   </button>
                                 </div>
                             )}
                           </div>
 
                           {error && (
-                              <div className="mt-4 p-4 border rounded-lg flex items-start gap-3 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300">
+                              <div className="mt-4 p-4 border rounded-lg flex items-start gap-3 bg-red-50 border-red-200 text-red-700">
                                 <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5"/>
                                 <p>{error}</p>
                               </div>
@@ -835,46 +599,44 @@ function App() {
                         </div>
 
                         {/* Help Text Disclaimer */}
-                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                           <div className="space-y-2">
                             <div className="flex items-start gap-2">
                               <span className="text-lg">📸</span>
-                              <p className="text-sm text-blue-800 dark:text-blue-200">
-                                {i18n.t('upload.photoTips')}
+                              <p className="text-sm text-blue-800">
+                                <strong>Photo tips:</strong> Make sure book spines are clearly readable, avoid shadows and glare, and limit amount of spines included (5-10 works best!)
                               </p>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-lg">❓</span>
-                              <p className="text-sm text-blue-800 dark:text-blue-200">
-                                {i18n.t('upload.somethingWrongTryAgain')}
+                              <p className="text-sm text-blue-800">
+                                <strong>Something wrong?</strong> Try taking the photo again or re-upload (AI is not perfect!)
                               </p>
                             </div>
                           </div>
                         </div>
 
-                        {/* Results - book display */}
+                        {/* Results - keep all your existing book display code */}
                         {topThreeBooks.length > 0 && (
                             <div className="space-y-6 px-4">
                               <div className="text-center py-4">
-                                <div className="flex items-center justify-center gap-4 flex-wrap">
-                                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                                    🏆 {i18n.t('scan.topRated')}
-                                  </h2>
-                                  <ExportButton books={books} scanDate={lastScanDate || new Date()} />
-                                </div>
-                                <p className="text-gray-600 dark:text-gray-400 mt-1">
-                                  {i18n.t('scan.found', { count: books.length})} • {i18n.t('results.sortedByRating')}
+                                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                                  🏆 Top Rated Books
+                                </h2>
+                                <p className="text-gray-600 mt-1">
+                                  Found {books.length} books • Sorted by rating
                                 </p>
                               </div>
+                              {/* Keep all your existing book cards */}
                               {topThreeBooks.map((book, index) => (
                                   <div
                                       key={index}
-                                      className={`bg-white dark:bg-gray-800 rounded-3xl shadow-lg overflow-hidden ${
-                                          book.inReadingList ? 'ring-4 ring-emerald-400 dark:ring-emerald-500' : ''
+                                      className={`bg-white rounded-3xl shadow-lg overflow-hidden ${
+                                          book.inReadingList ? 'ring-4 ring-emerald-400' : ''
                                       }`}
                                   >
                                     <div className="relative">
-                                      <div className="absolute inset-0 bg-gradient-to-b from-indigo-100 dark:from-indigo-900/50 via-indigo-50 dark:via-indigo-900/30 to-white dark:to-gray-800" />
+                                      <div className="absolute inset-0 bg-gradient-to-b from-indigo-100 via-indigo-50 to-white" />
 
                                       <div className="absolute top-4 left-4 z-10">
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
@@ -889,7 +651,7 @@ function App() {
                                           <div className="absolute top-4 right-4 z-10">
                                             <div className="bg-emerald-500 text-white px-3 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg">
                                               <BookOpen className="w-4 h-4" />
-                                              {i18n.t('results.onYourList')}
+                                              On Your List
                                             </div>
                                           </div>
                                       )}
@@ -901,7 +663,7 @@ function App() {
                                                 className="w-40 h-56 sm:w-48 sm:h-68 object-cover rounded-2xl shadow-2xl"
                                             />
                                         ) : (
-                                            <div className="w-40 h-56 sm:w-48 sm:h-68 bg-gray-200 dark:bg-gray-700 rounded-2xl flex items-center justify-center shadow-xl">
+                                            <div className="w-40 h-56 sm:w-48 sm:h-68 bg-gray-200 rounded-2xl flex items-center justify-center shadow-xl">
                                               <BookOpen className="w-16 h-16 text-gray-400"/>
                                             </div>
                                         )}
@@ -910,48 +672,53 @@ function App() {
 
                                     <div className="px-6 pb-8 mt-2">
                                       <div className="text-center mb-5">
-                                        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+                                        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
                                           {book.title}
                                         </h3>
-                                        <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">by {book.author}</p>
+                                        <p className="text-lg text-gray-600 mt-1">by {book.author}</p>
                                       </div>
 
                                       <div className="flex justify-center mb-5">
-                                        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30 px-6 py-4 rounded-2xl border border-amber-200 dark:border-amber-700">
+                                        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-amber-50 to-amber-100 px-6 py-4 rounded-2xl border border-amber-200">
                                           <Star className="w-8 h-8 fill-amber-400 text-amber-400"/>
                                           <div className="text-left">
-                                            <span className="text-3xl font-bold text-gray-800 dark:text-white">
-                                              {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
-                                            </span>
+                                        <span className="text-3xl font-bold text-gray-800">
+                                          {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
+                                        </span>
+                                            {/*{book.ratingsCount > 0 && (
+                                                <p className="text-sm text-gray-600">
+                                                  {book.ratingsCount.toLocaleString()} ratings
+                                                </p>
+                                            )}*/}
                                           </div>
                                         </div>
                                       </div>
 
                                       {book.ratingSource && (
-                                          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-5">
+                                          <p className="text-center text-sm text-gray-500 mb-5">
                                             📊 {book.ratingSource}
                                           </p>
                                       )}
 
                                       {/* Reading List Info */}
                                       {book.inReadingList && book.readingListInfo && (
-                                          <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-2xl p-4 mb-5">
-                                            <div className="flex items-center justify-center gap-2 text-emerald-800 dark:text-emerald-200">
+                                          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-5">
+                                            <div className="flex items-center justify-center gap-2 text-emerald-800">
                                               <BookOpen className="w-5 h-5" />
                                               <span className="font-semibold">
-                                                {book.readingListInfo.shelf === 'read' ? (i18n.t('results.youveReadThis')) :
-                                                    book.readingListInfo.shelf === 'currently-reading' ? `📖 ${i18n.t('results.currentlyReading')}` :
-                                                        `📚 ${i18n.t('results.onYourToReadList')}`}
-                                              </span>
+                                            {book.readingListInfo.shelf === 'read' ? '✓ You\'ve read this!' :
+                                                book.readingListInfo.shelf === 'currently-reading' ? '📖 Currently reading' :
+                                                    '📚 On your to-read list'}
+                                          </span>
                                               {book.readingListInfo.myRating > 0 && (
-                                                  <span className="ml-2">• {i18n.t('results.youRatedIt')} {book.readingListInfo.myRating}★</span>
+                                                  <span className="ml-2">• You rated it {book.readingListInfo.myRating}★</span>
                                               )}
                                             </div>
                                           </div>
                                       )}
 
                                       <div className="mb-4">
-                                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-center">
+                                        <p className="text-gray-700 leading-relaxed text-center">
                                           {book.description.replace(/<[^>]*>/g, '').substring(0, 200)}
                                           {book.description.length > 200 && (
                                               <>
@@ -961,59 +728,57 @@ function App() {
                                                       await Haptics.impact({style: ImpactStyle.Light});
                                                       openDescriptModal(book)
                                                     }}
-                                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline font-medium cursor-pointer touch-manipulation transition-transform active:scale-95"
+                                                    className="text-indigo-600 hover:text-indigo-800 font-semibold"
                                                 >
-                                                  More
+                                                  Read More
                                                 </button>
                                               </>
                                           )}
                                         </p>
                                       </div>
 
-                                      {/* External links */}
-                                      <div className="flex flex-wrap gap-4 items-center justify-center mb-5">
-                                        <a
-                                            href={book.amazonUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center justify-center"
-                                        >
-                                          <img src={amazonImage} alt="Buy on Amazon" className="h-12 w-auto sm:h-14 hover:opacity-80 transition-opacity"/>
-                                        </a>
-                                        {book.infoLink && (
-                                            <a
-                                                href={book.infoLink}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center justify-center"
-                                            >
-                                              <img src={googleImage} alt="See on Google Books" className="h-10 w-auto sm:h-12 hover:opacity-80 transition-opacity"/>
-                                            </a>
-                                        )}
-                                        {book.goodreadsUrl && (
-                                            <a
-                                                href={book.goodreadsUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center justify-center"
-                                            >
-                                              <img src={goodreadsImage} alt="See on Goodreads" className="h-10 w-auto sm:h-12 hover:opacity-80 transition-opacity"/>
-                                            </a>
-                                        )}
-                                      </div>
+                                      <div className="space-y-3">
+                                        <div className="grid grid-cols-2 gap-3">
+                                          <a
+                                              href={book.amazonUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex items-center justify-center gap-2 bg-amber-100 hover:bg-amber-200 py-4 rounded-2xl transition-all active:scale-95"
+                                          >
+                                            <img src={amazonImage} alt="Buy on Amazon" className="h-12 w-auto" />
+                                          </a>
+                                          <a
+                                              href={book.goodreadsUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex items-center justify-center gap-2 bg-stone-100 hover:bg-stone-200 py-4 rounded-2xl transition-all active:scale-95"
+                                          >
+                                            <img src={goodreadsImage} alt="See on Goodreads" className="h-12" />
+                                          </a>
+                                        </div>
 
-                                      {/* Share button */}
-                                      <div className="flex gap-3 px-4">
-                                        <button
-                                            onClick={async() => {
-                                              Haptics.impact({style: ImpactStyle.Light});
-                                              shareBook(book)
-                                            }}
-                                            className="flex-1 flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium py-3 rounded-xl transition-all active:scale-95"
-                                        >
-                                          <ShareIcon className="w-5 h-5" />
-                                          <span>{i18n.t('book.share')}</span>
-                                        </button>
+                                        <div className="flex gap-3">
+                                          {book.infoLink && (
+                                              <a
+                                                  href={book.infoLink}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 rounded-xl transition-all active:scale-95"
+                                              >
+                                                <img src={googleImage} alt="See on Google Books" className="h-6" />
+                                              </a>
+                                          )}
+                                          <button
+                                              onClick={async() =>{
+                                                Haptics.impact({style: ImpactStyle.Light});
+                                                shareBook(book)
+                                              }}
+                                              className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 rounded-xl transition-all active:scale-95"
+                                          >
+                                            <ShareIcon className="w-5 h-5" />
+                                            <span>Share</span>
+                                          </button>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -1021,11 +786,11 @@ function App() {
                             </div>
                         )}
 
-                        {/* Other books section */}
+                        {/* Other books section - keep your existing code */}
                         {displayBooks.length > 3 && (
                             <div className="mt-8 px-4">
-                              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                                {i18n.t('results.moreBooksFound')}
+                              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                                More Books Found
                               </h3>
                               <div className="space-y-3">
                                 {books.slice(3).map((book, index) => (
@@ -1035,10 +800,11 @@ function App() {
                                           await Haptics.impact({style: ImpactStyle.Light});
                                           openLinkModal(book)
                                         }}
-                                        className={`w-full text-left bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-4 flex gap-4 transition-all active:scale-98 hover:shadow-md ${
-                                            book.inReadingList ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 ring-2 ring-emerald-200 dark:ring-emerald-700' : 'border-gray-200 dark:border-gray-700'
+                                        className={`w-full text-left bg-white rounded-2xl shadow-sm p-4 flex gap-4 transition-all active:scale-98 hover:shadow-md ${
+                                            book.inReadingList ? 'bg-emerald-50 border-emerald-300 ring-2 ring-emerald-200' : 'border-gray-200'
                                         }`}
                                     >
+
                                       {book.thumbnail ? (
                                           <img
                                               src={book.thumbnail}
@@ -1046,7 +812,7 @@ function App() {
                                               className="w-16 h-24 object-cover rounded-xl shadow flex-shrink-0"
                                           />
                                       ) : (
-                                          <div className="w-16 h-24 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center flex-shrink-0">
+                                          <div className="w-16 h-24 bg-gray-100 rounded-xl flex items-center justify-center flex-shrink-0">
                                             <BookOpen className="w-6 h-6 text-gray-400"/>
                                           </div>
                                       )}
@@ -1054,25 +820,25 @@ function App() {
                                       <div className="flex-1 min-w-0 flex flex-col justify-center">
                                         <div className="flex items-start justify-between gap-2">
                                           <div className="min-w-0">
-                                            <h4 className="font-bold text-gray-900 dark:text-white line-clamp-2">{book.title}</h4>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">{book.author}</p>
+                                            <h4 className="font-bold text-gray-900 line-clamp-2">{book.title}</h4>
+                                            <p className="text-sm text-gray-600">{book.author}</p>
                                           </div>
                                           {book.inReadingList && (
-                                              <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0"/>
+                                              <BookOpen className="w-5 h-5 text-emerald-600 flex-shrink-0"/>
                                           )}
                                         </div>
 
                                         <div className="flex items-center gap-2 mt-2">
-                                          <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/30 px-2 py-1 rounded-lg">
+                                          <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
                                             <Star className="w-4 h-4 fill-amber-400 text-amber-400"/>
-                                            <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                              {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
-                                            </span>
+                                            <span className="text-sm font-bold">
+                                      {book.rating > 0 ? book.rating.toFixed(1) : 'N/A'}
+                                    </span>
                                           </div>
                                           {book.ratingsCount > 0 && (
-                                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                ({book.ratingsCount.toLocaleString()} reviews)
-                                              </span>
+                                              <span className="text-xs text-gray-500">
+                                        ({book.ratingsCount.toLocaleString()} reviews)
+                                      </span>
                                           )}
                                         </div>
                                       </div>
@@ -1081,12 +847,13 @@ function App() {
                                     </button>
                                 ))}
                                 <div className="text-center mb-6 mt-2">
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 mt-2">
-                                    📢 {i18n.t('disclaimer.amazonAffiliate')}
+                                  <p className="text-sm text-gray-600 mb-2 mt-2">
+                                    <strong className="text-gray-800">📢 Disclosure:</strong> As an Amazon Associate I earn from qualifying purchases.
+                                    This means if you click on an Amazon link and make a purchase, I may receive a small commission at no extra cost to you.
                                   </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-500">
-                                    {i18n.t('disclaimer.ratingsSource1')}
-                                    {i18n.t('disclaimer.ratingsSource2')}
+                                  <p className="text-xs text-gray-500">
+                                    Ratings and reviews are sourced from Google Books and Open Library.
+                                    This tool is not affiliated with Amazon, Goodreads, or Google.
                                   </p>
                                 </div>
                               </div>
@@ -1096,7 +863,8 @@ function App() {
                     </div>
                 )}
 
-                {/* LIBRARY TAB */}
+                {/* LIBRARY TAB - Keep your existing code */}
+
                 {activeTab === 'library' && (
                     <div className="h-full overflow-y-auto"
                          style={{
@@ -1104,22 +872,22 @@ function App() {
                            overscrollBehavior: 'contain'
                          }}>
                       <div className="max-w-6xl mx-auto p-8 pb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{i18n.t('library.title')}</h2>
+                        {/*style={{ paddingTop: 'max(env(safe-area-inset-top))'}}*/}
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">My Reading List</h2>
                         {user ? (
                             <ReadingList isOpen={true} onClose={() => setActiveTab('scan')}/>
                         ) : (
                             <EmptyState
                                 type="library"
                                 onAction={() => setShowAuthModal(true)}
-                                actionLabel={i18n.t('auth.signIn')}
-
+                                actionLabel="Sign In"
                             />
                         )}
                       </div>
                     </div>
                 )}
 
-                {/* HISTORY TAB */}
+                {/* HISTORY TAB - Keep your existing code */}
                 {activeTab === 'history' && (
                     <div className="h-full overflow-y-auto"
                          style={{
@@ -1127,7 +895,7 @@ function App() {
                            overscrollBehavior: 'contain'
                          }}>
                       <div className="max-w-6xl mx-auto p-8 pb-8">
-                        {pulling && pullDistance > 40 && (
+                        {pulling && pullDistance >40 && (
                             <div
                                 className="fixed top-0 left-0 right-0 flex justify-center transition-all"
                                 style={{
@@ -1135,53 +903,51 @@ function App() {
                                   paddingTop: 'env(safe-area-inset-top)'
                                 }}
                             >
-                              <div className="bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg">
-                                <Loader2 className={`w-6 h-6 text-indigo-600 dark:text-indigo-400 ${pullDistance > 80 ? 'animate-spin' : ''}`} />
+                              <div className="bg-white rounded-full p-3 shadow-lg">
+                                <Loader2 className={`w-6 h-6 text-indigo-600 ${pullDistance > 80 ? 'animate-spin' : ''}`} />
                               </div>
                             </div>
                         )}
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{i18n.t('history.title')}</h2>
-                        {user && scanHistory.length > 0 && (
-                            <button
-                              onClick={() => setShowBulkExport(true)}
-                              className="flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-medium hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
-                            >
-                              <Download className="w-4 h-4" />
-                              Export All
-                            </button>
-                        )}
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Scan History</h2>
                         {user ? (
                             scanHistory.length === 0 ? (
-                                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-                                  <History className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4"/>
-                                  <p className="text-gray-500 dark:text-gray-400">{i18n.t('history.empty')}</p>
+                                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                                  <History className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
+                                  <p className="text-gray-500">No scans yet. Start scanning books to build your history!</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
+                                  {/* Swipe instruction hint */}
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                                    <p className="text-sm text-blue-800 text-center">
+                                      💡 <strong>Tip:</strong> Swipe left on any scan to delete it
+                                    </p>
+                                  </div>
+
                                   {scanHistory.map((scan) => (
                                       <SwipeableScanItem
                                           key={scan.id}
                                           scan={scan}
                                           onDelete={handleDeleteScan}
-                                          onViewDetail={handleViewScanDetail}
                                       />
                                   ))}
                                 </div>
                             )
                         ) : (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-                              <p className="text-gray-600 dark:text-gray-300 mb-4">{i18n.t('account.signInToViewHistory')}</p>
+                            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                              <p className="text-gray-600 mb-4">Sign in to view your scan history</p>
                               <button
                                   onClick={() => setShowAuthModal(true)}
-                                  className="px-6 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700 dark:hover:bg-indigo-600"
+                                  className="px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold"
                               >
-                                {i18n.t('profile.signIn')}
+                                Sign In
                               </button>
                             </div>
                         )}
                       </div>
                     </div>
                 )}
+
                 {/* PROFILE TAB */}
                 {activeTab === 'profile' && (
                     <div className="h-full overflow-y-auto"
@@ -1189,104 +955,96 @@ function App() {
                            WebkitOverflowScrolling: 'touch',
                            overscrollBehavior: 'contain'
                          }}>
-                      <div className="max-w-6xl mx-auto p-8 pb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{i18n.t('profile.title')}</h2>
+                      <div className="max-w-6xl mx-auto p-8 pb-24">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile</h2>
+
                         {user ? (
                             <div className="space-y-4">
-                              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                              {/* User Info Card */}
+                              <div className="bg-white rounded-xl shadow-lg p-6">
                                 <div className="flex items-center gap-4 mb-4">
-                                  <div className="w-16 h-16 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center">
-                                    <User className="w-8 h-8 text-indigo-600 dark:text-indigo-400"/>
+                                  <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center">
+                                    <User className="w-8 h-8 text-indigo-600"/>
                                   </div>
                                   <div>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">{i18n.t('profile.signedInAs')}</p>
-                                    <p className="font-semibold text-gray-800 dark:text-white">{user.email}</p>
+                                    <p className="text-sm text-gray-500">Signed in as</p>
+                                    <p className="font-semibold text-gray-800">{user.email}</p>
                                   </div>
                                 </div>
 
-                                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+                                <div className="border-t pt-4 space-y-3">
                                   <button
                                       onClick={() => setActiveTab('library')}
-                                      className="w-full text-left px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-between active:scale-95 transition-transform"
+                                      className="w-full text-left px-4 py-3 bg-gray-50 rounded-full flex items-center justify-between active:scale-95 transition-transform"
                                   >
-                                    <span className="font-medium text-gray-800 dark:text-white">{i18n.t('library.title')}</span>
+                                    <span className="font-medium">Reading List</span>
                                     <BookOpen className="w-5 h-5 text-gray-400"/>
                                   </button>
 
                                   <button
                                       onClick={() => setActiveTab('history')}
-                                      className="w-full text-left px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-between active:scale-95 transition-transform"
+                                      className="w-full text-left px-4 py-3 bg-gray-50 rounded-full transition-transform active:scale-95 flex items-center justify-between"
                                   >
-                                    <span className="font-medium text-gray-800 dark:text-white">{i18n.t('history.title')}</span>
+                                    <span className="font-medium">Scan History</span>
                                     <History className="w-5 h-5 text-gray-400"/>
                                   </button>
 
                                   <button
                                       onClick={() => setShowPwChangeModal(true)}
-                                      className="w-full text-left px-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-lg flex items-center justify-between active:scale-95 transition-transform"
+                                      className="w-full text-left px-4 py-3 bg-gray-50 rounded-full flex items-center justify-between active:scale-95 transition-transform"
                                   >
-                                    <span className="font-medium text-gray-800 dark:text-white">{i18n.t('account.changePassword')}</span>
+                                    <span className="font-medium">Change Password</span>
                                     <Key className="w-5 h-5 text-gray-400"/>
                                   </button>
                                 </div>
                               </div>
 
-                              {/* Sign Out and Delete Account */}
+                              {/* Account Actions */}
                               <div className="space-y-3">
                                 <button
                                     onClick={handleSignOut}
-                                    className="w-full px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-full font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors active:scale-95 flex items-center justify-center gap-2"
+                                    className="w-full px-4 py-3 bg-gray-100 text-gray-700 rounded-full font-semibold hover:bg-gray-200 transition-colors active:scale-95"
                                 >
-                                  <LogOut className="w-4 h-4" />
-                                  {i18n.t('profile.signOut')}
+                                  Sign Out
                                 </button>
 
                                 <button
                                     onClick={() => setShowDeleteAccountModal(true)}
-                                    className="w-full px-4 py-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full font-semibold hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors active:scale-95 flex items-center justify-center gap-2"
+                                    className="w-full px-4 py-3 bg-red-50 text-red-600 rounded-full font-semibold hover:bg-red-100 transition-colors active:scale-95 flex items-center justify-center gap-2"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  {i18n.t('account.deleteAccount')}
+                                  Delete Account
                                 </button>
                               </div>
 
                               {/* Privacy Notice */}
-                              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-                                <p className="text-sm text-blue-800 dark:text-blue-200">
-                                  {i18n.t('privacy.dataPrivacy')}
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <p className="text-sm text-blue-800">
+                                  <strong>Data Privacy:</strong> You can delete individual scans by swiping left in your History,
+                                  or permanently delete your entire account and all associated data with the button above.
                                 </p>
                               </div>
                             </div>
                         ) : (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-                              <User className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4"/>
-                              <p className="text-gray-600 dark:text-gray-300 mb-4">{i18n.t('profile.signInDescription')}</p>
+                            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                              <User className="w-16 h-16 text-gray-300 mx-auto mb-4"/>
+                              <p className="text-gray-600 mb-4">Sign in to access your profile and saved data</p>
                               <button
                                   onClick={() => setShowAuthModal(true)}
-                                  className="px-6 py-3 bg-indigo-600 dark:bg-indigo-500 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700 dark:hover:bg-indigo-600"
+                                  className="px-6 py-3 bg-indigo-600 text-white rounded-full transition-transform active:scale-95 font-semibold hover:bg-indigo-700"
                               >
-                                {i18n.t('profile.signIn')}
+                                Sign In
                               </button>
                             </div>
                         )}
-                        {/* Theme and Language Settings */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                          <h3 className="font-semibold text-gray-800 dark:text-white mb-4">{i18n.t('account.settings')}</h3>
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <ThemeToggle />
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <LanguageSelector />
-                            </div>
-                          </div>
-                        </div>
+
                         {/* Thank you message - VISIBLE TO EVERYONE */}
                         <div className="text-center mt-6">
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            <a href="mailto:admin@shelfscan.xyz" className="text-indigo-600 dark:text-indigo-400 hover:underline">
-                              {i18n.t('feedback.thanksForUsing')}
-                            </a>
+                          <p className="text-sm text-gray-600">
+                            Thanks for using Shelf Scan! Let us know if you have any{' '}
+                            <a href="mailto:admin@shelfscan.xyz" className="text-indigo-600 hover:underline">
+                              comments or suggestions
+                            </a>!
                           </p>
                         </div>
                         <div className="text-center mt-6">
@@ -1295,9 +1053,9 @@ function App() {
                                e.preventDefault();
                                setShowPrivacyModal(true)
                              }}
-                             className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline"
+                             className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
                           >
-                            {i18n.t('privacy.privacyPolicy')}
+                            Privacy Policy
                           </a>
                         </div>
                       </div>
@@ -1315,7 +1073,7 @@ function App() {
                         >
                           <X className="w-6 h-6" />
                         </button>
-                        <h3 className="text-lg font-semibold">{i18n.t('imageEditor.adjustPhoto')}</h3>
+                        <h3 className="text-lg font-semibold">Adjust Photo</h3>
                         <button
                             onClick={handleCropConfirm}
                             className="p-2 hover:bg-gray-800 rounded-lg transition-colors active:scale-95"
@@ -1331,7 +1089,7 @@ function App() {
                             crop={crop}
                             zoom={zoom}
                             rotation={rotation}
-                            aspect={undefined}
+                            aspect={undefined} // Free aspect ratio
                             onCropChange={setCrop}
                             onZoomChange={setZoom}
                             onCropComplete={onCropComplete}
@@ -1343,7 +1101,7 @@ function App() {
                       <div className="bg-gray-900 text-white px-4 pt-4 space-y-4 flex-shrink-0" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 3.5rem)' }}>
                         {/* Zoom Control */}
                         <div>
-                          <label className="block text-sm mb-2">{i18n.t('imageEditor.zoom')}</label>
+                          <label className="block text-sm mb-2">Zoom</label>
                           <input
                               type="range"
                               min={1}
@@ -1361,7 +1119,7 @@ function App() {
                             className="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors active:scale-95 flex items-center justify-center gap-2"
                         >
                           <RotateCw className="w-5 h-5" />
-                          {i18n.t('imageEditor.rotate90')}
+                          Rotate 90°
                         </button>
 
                         {/* Action Buttons */}
@@ -1370,13 +1128,13 @@ function App() {
                               onClick={handleCropCancel}
                               className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors active:scale-95 font-semibold"
                           >
-                            {i18n.t('common.cancel')}
+                            Cancel
                           </button>
                           <button
                               onClick={handleCropConfirm}
                               className="flex-1 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors active:scale-95 font-semibold"
                           >
-                            {i18n.t('imageEditor.usePhoto')}
+                            Use Photo
                           </button>
                         </div>
                       </div>
@@ -1419,38 +1177,9 @@ function App() {
             onConfirmDelete={handleDeleteAccount}
             userEmail={user?.email}
         />
-        <ScanDetailModal
-          isOpen={showScanDetailModal}
-          onClose={() => setShowScanDetailModal(false)}
-          scan={selectedScan}
-          onViewBook={handleViewBookFromDetail}
-        />
-        <BulkExportModal
-          isOpen={showBulkExport}
-          onClose={() => setShowBulkExport(false)}
-          scanHistory={scanHistory}
-        />
-        <BarcodeScanner
-            show={showBarcodeScanner}
-            onClose={() => setShowBarcodeScanner(false)}
-            onScanComplete={(books) => {
-              setBooks(books);
-              setShowBarcodeScanner(false);
-            }}
-            API_URL={API_URL}
-            user={user}
-        />
         <HelpButton />
       </>
   );
 }
 
-function AppWrapper() {
-  return (
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>
-  );
-}
-
-export default AppWrapper;
+export default App;

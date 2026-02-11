@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from './AuthContext';
+import i18n from "./utils/i18n";
 
 export default function PwChangeModal({ isOpen, onClose }) {
     const [password, setPassword] = useState('');
@@ -69,7 +70,7 @@ export default function PwChangeModal({ isOpen, onClose }) {
                                 placeholder="••••••••"
                             />
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">At least 6 characters</p>
+                        <p className="text-xs text-gray-500 mt-1">{i18n.t('auth.passwordRequirement')}</p>
                     </div>
 
                     {error && (

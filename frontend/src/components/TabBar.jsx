@@ -2,13 +2,14 @@ import React from 'react';
 import { Home, BookOpen, History, User } from 'lucide-react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor} from "@capacitor/core";
+import i18n from "../utils/i18n";
 
 function TabBar({ activeTab, onTabChange }) {
     const tabs = [
-        { id: 'scan', icon: Home, label: 'Scan' },
-        { id: 'library', icon: BookOpen, label: 'Library' },
-        { id: 'history', icon: History, label: 'History' },
-        { id: 'profile', icon: User, label: 'Profile' },
+        { id: 'scan', icon: Home, label: i18n.t('nav.scan') },
+        { id: 'library', icon: BookOpen, label: i18n.t('nav.library') },
+        { id: 'history', icon: History, label: i18n.t('nav.history') },
+        { id: 'profile', icon: User, label: i18n.t('nav.profile') },
     ];
 
     const handleTabPress = async (tabId) => {

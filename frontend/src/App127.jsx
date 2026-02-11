@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Upload, WifiOff, Download, ScanBarcode as Barcode, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, ChevronRight, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
+import { Upload, WifiOff, ScanBarcode as Barcode, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, ChevronRight, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import AuthModal from './AuthModal';
 import ReadingList from './ReadingList';
@@ -32,9 +32,6 @@ import BarcodeScanner from './components/BarcodeScanner';
 import ThemeToggle from './components/ThemeToggle';
 import LanguageSelector from './components/LanguageSelector';
 import { Preferences } from '@capacitor/preferences';
-import ScanDetailModal from './components/ScanDetailModal';
-import ExportButton from "./components/ExportButton";
-import BulkExportModal from './components/BulkExportModal';
 import {
   queueScanForSync,
   processPendingScans,
@@ -77,10 +74,6 @@ function App() {
   const [pendingScans, setPendingScans] = useState([]);
   const [syncing, setSyncing] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
-  const [showScanDetailModal, setShowScanDetailModal] = useState(false);
-  const [selectedScan, setSelectedScan] = useState(null);
-  const [lastScanDate, setLastScanDate] = useState(null);
-  const [showBulkExport, setShowBulkExport] = useState(false);
 
   const {user, session, signOut, loading: authLoading} = useAuth();
   const { isDark } = useTheme();
@@ -284,7 +277,7 @@ function App() {
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', {ascending: false})
-          .limit(50);
+          .limit(10);
 
       if (error) throw error;
       setScanHistory(data || []);
@@ -416,7 +409,6 @@ function App() {
 
       if (data.success && data.books) {
         setBooks(data.books);
-        setLastScanDate(new Date());
         setMatchedCount(data.matchedInReadingList || 0);
         await Haptics.notification({type: NotificationType.Success});
 
@@ -590,17 +582,6 @@ function App() {
       throw error;
     }
   };
-
-  const handleViewScanDetail = (scan) => {
-    setSelectedScan(scan);
-    setShowScanDetailModal(true);
-  };
-
-  const handleViewBookFromDetail = (book) => {
-    setShowScanDetailModal(false);
-    setSelectedBook(book);
-    setShowLinkModal(true);
-  }
 
   const takeNativePhoto = async () => {
     await Haptics.impact({style: ImpactStyle.Light});
@@ -856,12 +837,9 @@ function App() {
                         {topThreeBooks.length > 0 && (
                             <div className="space-y-6 px-4">
                               <div className="text-center py-4">
-                                <div className="flex items-center justify-center gap-4 flex-wrap">
-                                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                                    🏆 {i18n.t('scan.topRated')}
-                                  </h2>
-                                  <ExportButton books={books} scanDate={lastScanDate || new Date()} />
-                                </div>
+                                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                                  🏆 {i18n.t('scan.topRated')}
+                                </h2>
                                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                                   {i18n.t('scan.found', { count: books.length})} • {i18n.t('results.sortedByRating')}
                                 </p>
@@ -1141,15 +1119,6 @@ function App() {
                             </div>
                         )}
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{i18n.t('history.title')}</h2>
-                        {user && scanHistory.length > 0 && (
-                            <button
-                              onClick={() => setShowBulkExport(true)}
-                              className="flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-xl font-medium hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
-                            >
-                              <Download className="w-4 h-4" />
-                              Export All
-                            </button>
-                        )}
                         {user ? (
                             scanHistory.length === 0 ? (
                                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
@@ -1163,7 +1132,6 @@ function App() {
                                           key={scan.id}
                                           scan={scan}
                                           onDelete={handleDeleteScan}
-                                          onViewDetail={handleViewScanDetail}
                                       />
                                   ))}
                                 </div>
@@ -1182,6 +1150,7 @@ function App() {
                       </div>
                     </div>
                 )}
+
                 {/* PROFILE TAB */}
                 {activeTab === 'profile' && (
                     <div className="h-full overflow-y-auto"
@@ -1418,17 +1387,6 @@ function App() {
             onClose={() => setShowDeleteAccountModal(false)}
             onConfirmDelete={handleDeleteAccount}
             userEmail={user?.email}
-        />
-        <ScanDetailModal
-          isOpen={showScanDetailModal}
-          onClose={() => setShowScanDetailModal(false)}
-          scan={selectedScan}
-          onViewBook={handleViewBookFromDetail}
-        />
-        <BulkExportModal
-          isOpen={showBulkExport}
-          onClose={() => setShowBulkExport(false)}
-          scanHistory={scanHistory}
         />
         <BarcodeScanner
             show={showBarcodeScanner}

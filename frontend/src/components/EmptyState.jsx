@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen, Camera, History } from 'lucide-react';
+import i18n from "../utils/i18n";
 
 function EmptyState({ type = 'scan', onAction, actionLabel }) {
     const states = {
@@ -22,7 +23,8 @@ function EmptyState({ type = 'scan', onAction, actionLabel }) {
         library: {
             icon: BookOpen,
             title: 'No reading list',
-            description: 'Upload your Goodreads CSV to see which scanned books are on your list',
+            // description: 'Upload your Goodreads CSV to see which scanned books are on your list',
+            description: i18n.t('auth.signInToAccess'),
             defaultActionLabel: 'Import CSV',
             iconBg: 'bg-emerald-100',
             iconColor: 'text-emerald-600',

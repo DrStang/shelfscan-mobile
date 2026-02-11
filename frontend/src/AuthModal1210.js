@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from './AuthContext';
-import i18n from "./utils/i18n";
 
 export default function AuthModal({ isOpen, onClose }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -25,12 +24,12 @@ export default function AuthModal({ isOpen, onClose }) {
       if (isSignUp) {
         const { error } = await signUp(email, password);
         if (error) throw error;
-        setSuccess(i18n.t('account.accountCreatedCheckEmail'));
+        setSuccess('Account created! Check your email to verify.');
         setTimeout(() => {onClose();}, 1000);
       } else {
         const { error } = await signIn(email, password);
         if (error) throw error;
-        setSuccess(i18n.t('account.signedInSuccessfully'));
+        setSuccess('Signed in successfully!');
         setTimeout(() => onClose(), 1000);
       }
     } catch (err) {
@@ -51,16 +50,16 @@ export default function AuthModal({ isOpen, onClose }) {
           </button>
 
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-            {isSignUp ? (i18n.t('auth.createAccount')) : (i18n.t('auth.welcomeBack'))}
+            {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h2>
           <p className="text-gray-600 mb-6">
-            {isSignUp ? (i18n.t('auth.signUpToSave')) : (i18n.t('auth.signInToAccess'))}
+            {isSignUp ? 'Sign up to save your scans' : 'Sign in to access your library'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {i18n.t('auth.email')}
+                Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -77,7 +76,7 @@ export default function AuthModal({ isOpen, onClose }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {i18n.t('auth.password')}
+                Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -92,7 +91,7 @@ export default function AuthModal({ isOpen, onClose }) {
                 />
               </div>
               {isSignUp && (
-                  <p className="text-xs text-gray-500 mt-1">{i18n.t('auth.passwordRequirement')}</p>
+                  <p className="text-xs text-gray-500 mt-1">At least 6 characters</p>
               )}
             </div>
 
@@ -116,10 +115,10 @@ export default function AuthModal({ isOpen, onClose }) {
               {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    {isSignUp ? (i18n.t('auth.creatingAccount')) : (i18n.t('auth.signingIn'))}
+                    {isSignUp ? 'Creating Account...' : 'Signing In...'}
                   </>
               ) : (
-                  isSignUp ? (i18n.t('auth.createAccount')) : (i18n.t('auth.signIn'))
+                  isSignUp ? 'Create Account' : 'Sign In'
               )}
             </button>
           </form>
@@ -133,12 +132,12 @@ export default function AuthModal({ isOpen, onClose }) {
                 }}
                 className="text-indigo-600 hover:text-indigo-700 font-medium"
             >
-              {isSignUp ? (i18n.t('auth.hasAccount')) : (i18n.t('auth.noAccount'))}
+              {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
             </button>
           </div>
 
           <p className="mt-4 text-xs text-gray-500 text-center">
-            {i18n.t('auth.worksWithout')}
+            App works without an account. Sign in to save your scans.
           </p>
         </div>
       </div>
