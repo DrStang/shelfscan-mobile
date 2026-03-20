@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Upload, WifiOff, Download, ScanBarcode as Barcode, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, ChevronRight, History, Globe, BookOpen, Key , Share as ShareIcon } from 'lucide-react';
+import { Upload, WifiOff, Download, ScanBarcode as Barcode, Book, Star, Loader2, Trash2, AlertCircle, X, Check, RotateCw, Camera, User, LogOut, ChevronRight, History, Globe, BookOpen, Key , Edit3, Share as ShareIcon } from 'lucide-react';
 import { useAuth } from './AuthContext';
 import AuthModal from './AuthModal';
 import ReadingList from './ReadingList';
@@ -35,6 +35,7 @@ import { Preferences } from '@capacitor/preferences';
 import ScanDetailModal from './components/ScanDetailModal';
 import ExportButton from "./components/ExportButton";
 import BulkExportModal from './components/BulkExportModal';
+import EditBooksModal from './components/EditBooksModal';
 import {
   queueScanForSync,
   processPendingScans,
@@ -81,6 +82,9 @@ function App() {
   const [selectedScan, setSelectedScan] = useState(null);
   const [lastScanDate, setLastScanDate] = useState(null);
   const [showBulkExport, setShowBulkExport] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingScanId, setEditingScanId] = useState(null);
+  const [editingHistoryBooks, setEditingHistoryBooks] = useState(null);
 
   const {user, session, signOut, loading: authLoading} = useAuth();
   const { isDark } = useTheme();
@@ -441,6 +445,66 @@ function App() {
       await Haptics.notification({type: NotificationType.Error});
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditCurrentScan = async (updatedBooks) => {
+    setBooks(updatedBooks);
+    setShowEditModal(false);
+
+    if (user && scanHistory.length > 0) {
+      try {
+        const latestScan = scanHistory[0];
+        const response = await fetch(`${API_URL}/api/scans/${latestScan.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({books: updatedBooks})
+        });
+
+        if (response.ok) {
+          await loadScanHistory();
+          console.log('✅ Updated scan in database');
+        }
+      } catch (err) {
+        console.error('Failed to update scan in DB:', err);
+
+      }
+    }
+  };
+
+  const handleEditHistoryScan = (scan) => {
+    setEditingScanId(scan.id);
+    setEditingHistoryBooks(scan.books);
+  };
+
+  const handleSaveHistoryEdit = async (updatedBooks) => {
+    if (!editingScanId || !user) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/scans/${editingScanId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ books: updatedBooks })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update scan');
+      }
+
+      await loadScanHistory();
+      setEditingScanId(null);
+      setEditingHistoryBooks(null);
+      console.log('✅ History scan updated');
+
+    } catch (err) {
+      console.error('Failed to update history scan:', err);
+      throw err;
     }
   };
 
@@ -857,9 +921,17 @@ function App() {
                             <div className="space-y-6 px-4">
                               <div className="text-center py-4">
                                 <div className="flex items-center justify-center gap-4 flex-wrap">
-                                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                                    🏆 {i18n.t('scan.topRated')}
+                                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">
+                                    🏆 {i18n.t('editBooks.topRated', { count: Math.min(3, displayBooks.length) })}
                                   </h2>
+                                  <button
+                                    onClick={() => setShowEditModal(true)}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-gray-700 rounded-lg hover:bg-indigo-100 dark:hover:bg-gray-600 transition-colors active:scale-95"
+                                  >
+                                    <Edit3 className="w-4 h-4"/>
+                                    {i18n.t('editBooks.editBooks')}
+                                  </button>
+
                                   <ExportButton books={books} scanDate={lastScanDate || new Date()} />
                                 </div>
                                 <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -1164,6 +1236,7 @@ function App() {
                                           scan={scan}
                                           onDelete={handleDeleteScan}
                                           onViewDetail={handleViewScanDetail}
+                                          onEdit={handleEditHistoryScan}
                                       />
                                   ))}
                                 </div>
@@ -1430,6 +1503,27 @@ function App() {
           onClose={() => setShowBulkExport(false)}
           scanHistory={scanHistory}
         />
+
+        {showEditModal && books.length > 0 && (
+            <EditBooksModal
+              books={books}
+              onSave={handleEditCurrentScan}
+              onClose={() => setShowEditModal(false)}
+              userId={user?.id}
+            />
+        )}
+
+        {editingHistoryBooks && (
+            <EditBooksModal
+              books={editingHistoryBooks}
+              onSave={handleSaveHistoryEdit}
+              onClose={() => {
+                setEditingScanId(null);
+                setEditingHistoryBooks(null);
+              }}
+              userId={user?.id}
+            />
+        )}
         <BarcodeScanner
             show={showBarcodeScanner}
             onClose={() => setShowBarcodeScanner(false)}

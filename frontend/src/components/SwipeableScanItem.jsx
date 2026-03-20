@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Trash2, ChevronRight, Star, BookOpen } from 'lucide-react';
+import { Trash2, ChevronRight, Star, BookOpen, Edit3 } from 'lucide-react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
 import i18n from "../utils/i18n";
 
-function SwipeableScanItem({ scan, onDelete, onViewDetail }) {
+function SwipeableScanItem({ scan, onDelete, onViewDetail, onEdit }) {
     const [swipeX, setSwipeX] = useState(0);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -60,6 +60,16 @@ function SwipeableScanItem({ scan, onDelete, onViewDetail }) {
                 await Haptics.impact({ style: ImpactStyle.Light });
             }
             onViewDetail(scan);
+        }
+    };
+
+    const handleEditClick = async (e) => {
+        e.stopPropagation(); // Prevent triggering onViewDetail
+        if (onEdit) {
+            if (Capacitor.isNativePlatform()) {
+                await Haptics.impact({ style: ImpactStyle.Light });
+            }
+            onEdit(scan);
         }
     };
 
@@ -124,159 +134,101 @@ function SwipeableScanItem({ scan, onDelete, onViewDetail }) {
                     onTouchEnd={handleTouchEnd}
                     onClick={handleClick}
                 >
-                    {/* Date and Book Count Header */}
+                    {/* Top row: date + book count + edit button + chevron */}
                     <div className="flex justify-between items-center mb-3">
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {new Date(scan.created_at).toLocaleDateString('en-US',{
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                            })} • {new Date(scan.created_at).toLocaleTimeString('en-US',{
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
-                        })}
+                            {new Date(scan.created_at).toLocaleDateString()} •
+                            {new Date(scan.created_at).toLocaleTimeString()}
                         </p>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-lg">
+                        <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
                                 {i18n.t('history.books', { count: books.length })}
                             </span>
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
+                            {/* Edit Button */}
+                            {onEdit && (
+                                <button
+                                    onClick={handleEditClick}
+                                    className="p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                    title={i18n.t('editBooks.editThisScan')}
+                                >
+                                    <Edit3 className="w-4 h-4" />
+                                </button>
+                            )}
+                            <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                         </div>
                     </div>
 
-                    {/* Stats Row */}
-                    <div className="flex gap-4 mb-3">
-                        {avgRating > 0 && (
-                            <div className="flex items-center gap-1 text-sm">
-                                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                                <span className="font-medium text-gray-700 dark:text-gray-300">
-                                    {avgRating.toFixed(1)} avg
-                                </span>
-                            </div>
-                        )}
-                        {onListCount > 0 && (
-                            <div className="flex items-center gap-1 text-sm">
-                                <BookOpen className="w-4 h-4 text-emerald-500" />
-                                <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                                    {onListCount} on list
-                                </span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Top Rated Book Preview */}
+                    {/* Top rated book highlight */}
                     {topRatedBook && (
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 mb-3">
-                            <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/50 px-2 py-0.5 rounded">
-                                    #1 Rated
-                                </span>
-                                {topRatedBook.inReadingList && (
-                                    <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                        📚 On List
+                        <div className="flex items-center gap-2 mb-2">
+                            {topRatedBook.thumbnail && (
+                                <img
+                                    src={topRatedBook.thumbnail}
+                                    alt={topRatedBook.title}
+                                    className="w-8 h-12 object-cover rounded shadow-sm"
+                                />
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">
+                                    {topRatedBook.title}
+                                </p>
+                                <div className="flex items-center gap-1">
+                                    <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-xs text-gray-600 dark:text-gray-300">
+                                        {topRatedBook.rating > 0 ? topRatedBook.rating.toFixed(1) : 'N/A'}
                                     </span>
-                                )}
-                            </div>
-                            <h4 className="font-semibold text-gray-900 dark:text-white truncate">
-                                {topRatedBook.title}
-                            </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                    {topRatedBook.author}
-                                </span>
-                                {topRatedBook.rating > 0 && (
-                                    <div className="flex items-center gap-1">
-                                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            {topRatedBook.rating.toFixed(1)}
-                                        </span>
-                                    </div>
-                                )}
+                                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                                        {i18n.t('history.topRated')}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Book Titles Preview */}
+                    {/* Book title tags */}
                     <div className="flex gap-2 flex-wrap">
-                        {books.slice(1, 4).map((book, idx) => (
-                            <span
-                                key={idx}
-                                className={`text-xs px-2 py-1 rounded-lg truncate max-w-[140px] ${
-                                    book.inReadingList
-                                        ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                }`}
-                            >
+                        {books.slice(0, 3).map((book, idx) => (
+                            <span key={idx} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded">
                                 {book.title}
                             </span>
                         ))}
-                        {books.length > 4 && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1">
-                                +{books.length - 4} more
+                        {books.length > 3 && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                +{books.length - 3} {i18n.t('common.more')}
                             </span>
                         )}
                     </div>
 
-                    {/* Tap to view hint */}
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">
-                        {i18n.t('history.tapToView')}
-                    </p>
+                    {/* Reading list match indicator */}
+                    {onListCount > 0 && (
+                        <div className="mt-2 flex items-center gap-1">
+                            <BookOpen className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                                {i18n.t('history.matchesFound', { count: onListCount })}
+                            </span>
+                        </div>
+                    )}
                 </div>
-
-                {/* Delete Button (appears when swiped) */}
-                {swipeX < -40 && (
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDeleteConfirm(true);
-                        }}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-red-600 text-white p-3 rounded-full shadow-lg z-10"
-                    >
-                        <Trash2 className="w-5 h-5" />
-                    </button>
-                )}
             </div>
 
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-sm w-full p-6">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center">
-                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-800 dark:text-white">{i18n.t('history.deleteTitle')}</h3>
-                        </div>
-
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                            {i18n.t('history.deleteConfirmation', {date: new Date(scan.created_at).toLocaleDateString(), count: books.length})}
-                        </p>
-
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleCancelDelete}>
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-sm w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">{i18n.t('history.deleteConfirmTitle')}</h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">{i18n.t('history.deleteConfirmMessage')}</p>
                         <div className="flex gap-3">
                             <button
-                                onClick={handleCancelDelete}
-                                disabled={isDeleting}
-                                className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
+                                onClick={handleDelete}
+                                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors active:scale-95"
                             >
-                                {i18n.t('common.cancel')}
+                                {i18n.t('common.delete')}
                             </button>
                             <button
-                                onClick={handleDelete}
-                                disabled={isDeleting}
-                                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                onClick={handleCancelDelete}
+                                className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors active:scale-95"
                             >
-                                {isDeleting ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        {i18n.t('history.deleting')}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Trash2 className="w-4 h-4" />
-                                        {i18n.t('common.delete')}
-                                    </>
-                                )}
+                                {i18n.t('common.cancel')}
                             </button>
                         </div>
                     </div>

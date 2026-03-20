@@ -208,7 +208,6 @@ const translations = {
         'common.delete': 'Delete',
         'common.save': 'Save',
         'common.loading': 'Loading...',
-        'common.more': 'more',
 
         // Header
         'help.title': 'Quick Start Guide',
@@ -296,10 +295,6 @@ const translations = {
 
         // History additions
         'history.tapToView': 'Tap to view all books & export',
-        'history.topRated': 'Top rated',
-        'history.matchesFound': '{{count}} on your list',
-        'history.at': 'at',
-        'history.booksCount': '{{count}} books',
 
         // Common
 
@@ -550,7 +545,6 @@ const translations = {
         'common.delete': 'Eliminar',
         'common.save': 'Guardar',
         'common.loading': 'Cargando...',
-        'common.more': 'más',
 
         'help.title': 'Guía de Inicio Rápido',
         'help.subtitle': 'Aprende a usar Shelf Scan',
@@ -634,10 +628,6 @@ const translations = {
         'export.txtDescription': 'Archivo de texto',
 
         'history.tapToView': 'Toca para ver todos los libros y exportar',
-        'history.topRated': 'Mejor calificado',
-        'history.matchesFound': '{{count}} en tu lista',
-        'history.at': 'a las',
-        'history.booksCount': '{{count}} libros',
 
 
 
@@ -889,7 +879,6 @@ const translations = {
         'common.delete': 'Supprimer',
         'common.save': 'Enregistrer',
         'common.loading': 'Chargement...',
-        'common.more': 'de plus',
 
         // Header
         'help.title': 'Guide de Démarrage Rapide',
@@ -974,10 +963,6 @@ const translations = {
         'export.txtDescription': 'Fichier texte',
 
         'history.tapToView': 'Appuyez pour voir tous les livres et exporter',
-        'history.topRated': 'Mieux noté',
-        'history.matchesFound': '{{count}} dans votre liste',
-        'history.at': 'à',
-        'history.booksCount': '{{count}} livres',
 
 
 
@@ -1228,7 +1213,6 @@ const translations = {
         'common.delete': 'Löschen',
         'common.save': 'Speichern',
         'common.loading': 'Wird geladen...',
-        'common.more': 'weitere',
 
         // Help
         'help.title': 'Kurzanleitung',
@@ -1297,10 +1281,6 @@ const translations = {
         'export.txtDescription': 'Textdatei',
 
         'history.tapToView': 'Tippen um alle Bücher zu sehen & exportieren',
-        'history.topRated': 'Bestbewertet',
-        'history.matchesFound': '{{count}} auf deiner Liste',
-        'history.at': 'um',
-        'history.booksCount': '{{count}} Bücher',
 
 
         // Bulk Export
@@ -1512,7 +1492,6 @@ const translations = {
         'common.delete': 'Elimina',
         'common.save': 'Salva',
         'common.loading': 'Caricamento...',
-        'common.more': 'altri',
         'help.title': 'Guida Rapida',
         'help.subtitle': 'Scopri come usare Shelf Scan',
         'help.quickStart': 'Avvio Rapido',
@@ -1578,10 +1557,6 @@ const translations = {
         'export.txtDescription': 'File di testo',
 
         'history.tapToView': 'Tocca per vedere tutti i libri ed esportare',
-        'history.topRated': 'Più votato',
-        'history.matchesFound': '{{count}} nella tua lista',
-        'history.at': 'alle',
-        'history.booksCount': '{{count}} libri',
 
 
         // Bulk Export
@@ -1793,7 +1768,6 @@ const translations = {
         'common.delete': 'Удалить',
         'common.save': 'Сохранить',
         'common.loading': 'Загрузка...',
-        'common.more': 'ещё',
         'help.title': 'Краткое руководство',
         'help.subtitle': 'Узнайте, как использовать Shelf Scan',
         'help.quickStart': 'Быстрый старт',
@@ -1860,10 +1834,6 @@ const translations = {
         'export.txtDescription': 'Текстовый файл',
 
         'history.tapToView': 'Нажмите, чтобы увидеть все книги и экспортировать',
-        'history.topRated': 'Лучший рейтинг',
-        'history.matchesFound': '{{count}} в вашем списке',
-        'history.at': 'в',
-        'history.booksCount': '{{count}} книг',
 
 
         // Bulk Export
@@ -2076,7 +2046,6 @@ const translations = {
         'common.delete': '删除',
         'common.save': '保存',
         'common.loading': '加载中...',
-        'common.more': '更多',
         'help.title': '快速入门指南',
         'help.subtitle': '了解如何使用Shelf Scan',
         'help.quickStart': '快速开始',
@@ -2142,10 +2111,6 @@ const translations = {
         'export.txtDescription': '文本文件',
 
         'history.tapToView': '点击查看所有书籍并导出',
-        'history.topRated': '评分最高',
-        'history.matchesFound': '{{count}} 在您的清单中',
-        'history.at': '',
-        'history.booksCount': '{{count}} 本书',
 
 
         // Bulk Export
