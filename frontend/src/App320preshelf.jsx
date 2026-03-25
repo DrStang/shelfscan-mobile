@@ -3,7 +3,6 @@ import { Upload, WifiOff, Download, ScanBarcode as Barcode, Book, Star, Loader2,
 import { useAuth } from './AuthContext';
 import AuthModal from './AuthModal';
 import ReadingList from './ReadingList';
-import LibraryTab from "./components/LibraryTab";
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor} from "@capacitor/core";
 import { supabase } from './supabaseClient';
@@ -37,7 +36,6 @@ import ScanDetailModal from './components/ScanDetailModal';
 import ExportButton from "./components/ExportButton";
 import BulkExportModal from './components/BulkExportModal';
 import EditBooksModal from './components/EditBooksModal';
-import MyCollection from './components/MyCollection';
 import {
   queueScanForSync,
   processPendingScans,
@@ -304,31 +302,15 @@ function App() {
 
     setSavingScan(true);
     try {
-      const { data: newScan, error} = await supabase
+      const {error} = await supabase
           .from('scans')
           .insert({
             user_id: user.id,
             books: booksData,
             created_at: new Date().toISOString()
-          })
-          .select('id')
-          .single();
+          });
 
       if (error) throw error;
-
-      if (newScan) {
-        try {
-          await fetch(`${API_URL}/api/user-books/extract-from-scan/${newScan.id}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`
-            }
-          });
-        } catch (extractErr) {
-          console.error('Non-critical: failed to extract books:', extractErr);
-        }
-      }
       await loadScanHistory();
     } catch (err) {
       console.error('Error saving scan:', err);
@@ -1193,10 +1175,10 @@ function App() {
                            WebkitOverflowScrolling: 'touch',
                            overscrollBehavior: 'contain'
                          }}>
-                      <div className="max-w-6xl mx-auto p-4 pb-8 sm:p-8 sm:pb-8">
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">{i18n.t('collection.title')}</h2>
+                      <div className="max-w-6xl mx-auto p-8 pb-8">
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">{i18n.t('library.title')}</h2>
                         {user ? (
-                            <LibraryTab session={session} scanHistory={scanHistory} />
+                            <ReadingList isOpen={true} onClose={() => setActiveTab('scan')}/>
                         ) : (
                             <EmptyState
                                 type="library"
