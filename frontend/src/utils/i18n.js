@@ -343,6 +343,10 @@ const translations = {
         'editBooks.editThisScan': 'Edit this scan',
         'editBooks.editBooks': 'Edit Books',
         'editBooks.topRated': 'Top {{count}} Highest-Rated',
+        'editBooks.isbnOptional': 'ISBN (optional)',
+        'editBooks.isbnPlaceholder': 'Book ISBN',
+        'editBooks.replaceByBarcode': 'Scan Barcode',
+        'editBooks.addByBarcode': 'Scan Barcode',
 
         // Collection
         'collection.title': 'My Collection',
@@ -719,6 +723,10 @@ const translations = {
         'editBooks.editThisScan': 'Editar este escaneo',
         'editBooks.editBooks': 'Editar libros',
         'editBooks.topRated': 'Top {{count}} mejor calificados',
+        'editBooks.isbnOptional': 'ISBN (opcional)',
+'editBooks.isbnPlaceholder': 'ISBN del libro',
+'editBooks.replaceByBarcode': 'Escanear código',
+'editBooks.addByBarcode': 'Escanear código',
 
         'collection.title': 'Mi Colección',
         'collection.books': 'Libros',
@@ -1095,6 +1103,10 @@ const translations = {
         'editBooks.editThisScan': 'Modifier ce scan',
         'editBooks.editBooks': 'Modifier les livres',
         'editBooks.topRated': 'Top {{count}} les mieux notés',
+        'editBooks.isbnOptional': 'ISBN (facultatif)',
+'editBooks.isbnPlaceholder': 'ISBN du livre',
+'editBooks.replaceByBarcode': 'Scanner le code',
+'editBooks.addByBarcode': 'Scanner le code',
 
         // Collection
         'collection.title': 'Ma Collection',
@@ -1455,6 +1467,10 @@ const translations = {
         'editBooks.editThisScan': 'Diesen Scan bearbeiten',
         'editBooks.editBooks': 'Bücher bearbeiten',
         'editBooks.topRated': 'Top {{count}} bestbewertet',
+        'editBooks.isbnOptional': 'ISBN (optional)',
+'editBooks.isbnPlaceholder': 'Buch-ISBN',
+'editBooks.replaceByBarcode': 'Barcode scannen',
+'editBooks.addByBarcode': 'Barcode scannen',
 
         // Collection
         'collection.title': 'Meine Sammlung',
@@ -1774,6 +1790,10 @@ const translations = {
         'editBooks.editThisScan': 'Modifica questa scansione',
         'editBooks.editBooks': 'Modifica libri',
         'editBooks.topRated': 'Top {{count}} più votati',
+        'editBooks.isbnOptional': 'ISBN (facoltativo)',
+'editBooks.isbnPlaceholder': 'ISBN del libro',
+'editBooks.replaceByBarcode': 'Scansiona codice',
+'editBooks.addByBarcode': 'Scansiona codice',
 
         // Collection
         'collection.title': 'La Mia Collezione',
@@ -2094,6 +2114,10 @@ const translations = {
         'editBooks.editThisScan': 'Редактировать это сканирование',
         'editBooks.editBooks': 'Редактировать книги',
         'editBooks.topRated': 'Топ-{{count}} с лучшим рейтингом',
+        'editBooks.isbnOptional': 'ISBN (необязательно)',
+'editBooks.isbnPlaceholder': 'ISBN книги',
+'editBooks.replaceByBarcode': 'Сканировать штрихкод',
+'editBooks.addByBarcode': 'Сканировать штрихкод',
 
 
         // Collection
@@ -2415,6 +2439,10 @@ const translations = {
         'editBooks.editThisScan': '编辑此次扫描',
         'editBooks.editBooks': '编辑书籍',
         'editBooks.topRated': '评分最高的 {{count}} 本',
+        'editBooks.isbnOptional': 'ISBN（可选）',
+'editBooks.isbnPlaceholder': '书籍ISBN',
+'editBooks.replaceByBarcode': '扫描条码',
+'editBooks.addByBarcode': '扫描条码',
 
         // Collection
         'collection.title': '我的收藏',
