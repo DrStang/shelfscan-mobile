@@ -85,6 +85,7 @@ function App() {
   const [lastScanDate, setLastScanDate] = useState(null);
   const [showBulkExport, setShowBulkExport] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCollectionBook, setEditingCollectionBook] = useState(null);
   const [editingScanId, setEditingScanId] = useState(null);
   const [editingHistoryBooks, setEditingHistoryBooks] = useState(null);
 
@@ -490,6 +491,49 @@ function App() {
         console.error('Failed to update scan in DB:', err);
 
       }
+    }
+  };
+
+  const handleEditCollectionBook = (book) => {
+    setEditingCollectionBook(book);
+  };
+
+  const handleSaveCollectionBookEdit = async(updatedBooks) => {
+    if (!updatedBooks || updatedBooks.length === 0 || !editingCollectionBook) return;
+
+    const updatedBook = updatedBooks[0];
+
+    try {
+      const { error } = await supabase
+          .from('user_books')
+          .update({
+              title: updatedBook.title,
+              author: updatedBook.author,
+              isbn: updatedBook.isbn || null,
+              rating: updatedBook.rating || null,
+              ratings_count: updatedBook.ratingsCount || updatedBook.ratings_count || 0,
+              description: updatedBook.description || null,
+              thumbnail: updatedBook.thumbnail || null,
+              sources: updatedBook.sources || [],
+          })
+          .eq('id', editingCollectionBook.id)
+          .eq('user_id', user.id);
+
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error(i18n.t('editBooks.duplicateInCollection'));
+        }
+        throw error;
+
+      }
+
+      console.log('✅ Collection book updated:', updatedBook.title);
+      setEditingCollectionBook(null);
+      await loadScanHistory()
+
+    } catch (err) {
+        console.error('Failed to update collection book:', err);
+        throw err;
     }
   };
 
@@ -1196,7 +1240,7 @@ function App() {
                       <div className="max-w-6xl mx-auto p-4 pb-8 sm:p-8 sm:pb-8">
                         <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">{i18n.t('collection.title')}</h2>
                         {user ? (
-                            <LibraryTab session={session} scanHistory={scanHistory} />
+                            <LibraryTab session={session} scanHistory={scanHistory} onEditBook={handleEditCollectionBook} />
                         ) : (
                             <EmptyState
                                 type="library"
@@ -1542,6 +1586,16 @@ function App() {
               userId={user?.id}
             />
         )}
+
+        {editingCollectionBook && (
+            <EditBooksModal
+              books={[editingCollectionBook]}
+              onSave={handleSaveCollectionBookEdit}
+              onClose={() => setEditingCollectionBook(null)}
+              userId={user?.id}
+            />
+        )}
+
         <BarcodeScanner
             show={showBarcodeScanner}
             onClose={() => setShowBarcodeScanner(false)}

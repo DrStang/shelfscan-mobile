@@ -11,7 +11,7 @@ import MyCollection from './MyCollection';
 import ReadingList from '../ReadingList';
 import i18n from '../utils/i18n';
 
-function LibraryTab({ session, scanHistory }) {
+function LibraryTab({ session, scanHistory, onEditBook }) {
     const [activeSubtab, setActiveSubtab] = useState('collection');
 
     const handleTabSwitch = async (tab) => {
@@ -52,7 +52,7 @@ function LibraryTab({ session, scanHistory }) {
 
             {/* Subtab Content */}
             {activeSubtab === 'collection' ? (
-                <MyCollection session={session} scanHistory={scanHistory} />
+                <MyCollection session={session} scanHistory={scanHistory} onEditBook={onEditBook} />
             ) : (
                 <ReadingList isOpen={true} onClose={() => setActiveSubtab('collection')} />
             )}

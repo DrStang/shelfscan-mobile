@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Search, Plus, BookOpen, Star, Loader2, FolderPlus,
-    ChevronDown, X, Library, AlertTriangle, Filter, BarChart3
+    ChevronDown, X, Library, AlertTriangle, Filter, BarChart3, Edit3
 } from 'lucide-react';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Capacitor } from '@capacitor/core';
@@ -17,7 +17,7 @@ import AddToShelfModal from './AddToShelfModal';
 import DuplicatesModal from './DuplicatesModal';
 import i18n from '../utils/i18n';
 
-function MyCollection({ session, scanHistory }) {
+function MyCollection({ session, scanHistory, onEditBook }) {
     const {
         shelves, loading: shelvesLoading,
         createShelf, updateShelf, deleteShelf,
@@ -115,6 +115,7 @@ function MyCollection({ session, scanHistory }) {
         setDebouncedSearch('');
         setSearchQuery('');
     };
+
 
     const sortOptions = [
         { value: 'newest', label: i18n.t('collection.sortNewest') },
@@ -531,6 +532,22 @@ function MyCollection({ session, scanHistory }) {
                                 </div>
                             )}
 
+                            {onEditBook && (
+                                <button
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (Capacitor.isNativePlatform()) {
+                                            await Haptics.impact({ style: ImpactStyle.Light });
+                                        }
+                                        onEditBook(book);
+                                    }}
+                                    className="p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400
+                                        hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+                                    title={i18n.t('editBooks.editThisBook')}
+                                >
+                                    <Edit3 className="w-4 h-4" />
+                                </button>
+                            )}
                             <button
                                 onClick={async () => {
                                     if (Capacitor.isNativePlatform()) {
