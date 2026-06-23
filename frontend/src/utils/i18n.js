@@ -278,6 +278,39 @@ const translations = {
         'help.needMoreHelp': 'Need more help?',
         'help.contactUs': 'Contact us',
 
+        // Export Scans
+        'help.exportTitle': '📤 Export Scans',
+        'help.exportDesc': 'Save and share your scan results in multiple formats.',
+        'help.exportSingleTitle': 'Single Scan Export',
+        'help.exportSingleDesc': 'Tap any scan in History, then use the export buttons to save as CSV, HTML, or share directly.',
+        'help.exportBulkTitle': 'Bulk Export',
+        'help.exportBulkDesc': 'Tap the export icon in History to select multiple scans and export them all at once.',
+        'help.exportFormats': 'Formats: CSV (for spreadsheets), HTML (print or save as PDF), TXT (plain text)',
+
+// Edit & Add Books
+        'help.editBooksTitle': '✏️ Edit & Add Books',
+        'help.editBooksDesc': 'AI isn\'t perfect — you can correct scan results anytime.',
+        'help.editBooksCorrect': 'Correct a book',
+        'help.editBooksCorrectDesc': 'Tap a book in your scan results, then edit the title or author and look it up again.',
+        'help.editBooksAdd': 'Add a missing book',
+        'help.editBooksAddDesc': 'Tap "Add a Book" to manually enter a title the AI missed.',
+        'help.editBooksRemove': 'Remove a book',
+        'help.editBooksRemoveDesc': 'Swipe or tap the remove button to delete incorrect entries.',
+        'help.editBooksBarcode': 'Scan barcode',
+        'help.editBooksBarcodeDesc': 'Use your camera to scan a book\'s ISBN barcode for instant lookup.',
+        'help.editBooksHint': 'Tip: Tap the pencil icon on any scan to enter edit mode.',
+
+// Collection & Shelves
+        'help.collectionTitle': '📚 Collection & Shelves',
+        'help.collectionDesc': 'Organize all your scanned books into a personal library.',
+        'help.collectionShelvesTitle': 'Custom Shelves',
+        'help.collectionShelvesDesc': 'Create named shelves (e.g. "Favorites", "To Read") and assign books to them.',
+        'help.collectionSearchTitle': 'Search & Filter',
+        'help.collectionSearchDesc': 'Find books by title or author, filter by rating, or view unshelved books.',
+        'help.collectionImport': 'Import books from your scan history with one tap',
+        'help.collectionDuplicates': 'Auto-detect and merge duplicate books',
+        'help.collectionStats': 'View collection stats: total books, ratings, top authors',
+
         // Scan Detail Modal
         'scanDetail.title': 'Scan Details',
         'scanDetail.booksFound': 'Books Found',
@@ -663,6 +696,40 @@ const translations = {
         'help.needMoreHelp': '¿Necesitas más ayuda?',
         'help.contactUs': 'Contáctanos',
 
+        // Export Scans
+        'help.exportTitle': '📤 Exportar Escaneos',
+        'help.exportDesc': 'Guarda y comparte los resultados de tus escaneos en varios formatos.',
+        'help.exportSingleTitle': 'Exportar un escaneo',
+        'help.exportSingleDesc': 'Toca cualquier escaneo en el Historial, luego usa los botones de exportar para guardar como CSV, HTML o compartir directamente.',
+        'help.exportBulkTitle': 'Exportación masiva',
+        'help.exportBulkDesc': 'Toca el icono de exportar en el Historial para seleccionar varios escaneos y exportarlos todos a la vez.',
+        'help.exportFormats': 'Formatos: CSV (para hojas de cálculo), HTML (imprimir o guardar como PDF), TXT (texto plano)',
+
+// Edit & Add Books
+        'help.editBooksTitle': '✏️ Editar y Añadir Libros',
+        'help.editBooksDesc': 'La IA no es perfecta — puedes corregir los resultados en cualquier momento.',
+        'help.editBooksCorrect': 'Corregir un libro',
+        'help.editBooksCorrectDesc': 'Toca un libro en tus resultados, edita el título o autor y búscalo de nuevo.',
+        'help.editBooksAdd': 'Añadir un libro faltante',
+        'help.editBooksAddDesc': 'Toca "Añadir un libro" para ingresar manualmente un título que la IA no detectó.',
+        'help.editBooksRemove': 'Eliminar un libro',
+        'help.editBooksRemoveDesc': 'Desliza o toca el botón de eliminar para borrar entradas incorrectas.',
+        'help.editBooksBarcode': 'Escanear código de barras',
+        'help.editBooksBarcodeDesc': 'Usa tu cámara para escanear el código ISBN de un libro.',
+        'help.editBooksHint': 'Consejo: Toca el icono de lápiz en cualquier escaneo para entrar en modo edición.',
+
+// Collection & Shelves
+        'help.collectionTitle': '📚 Colección y Estantes',
+        'help.collectionDesc': 'Organiza todos tus libros escaneados en una biblioteca personal.',
+        'help.collectionShelvesTitle': 'Estantes personalizados',
+        'help.collectionShelvesDesc': 'Crea estantes con nombre (ej. "Favoritos", "Por leer") y asigna libros.',
+        'help.collectionSearchTitle': 'Buscar y filtrar',
+        'help.collectionSearchDesc': 'Busca libros por título o autor, filtra por valoración o ve libros sin clasificar.',
+        'help.collectionImport': 'Importa libros de tu historial de escaneos con un toque',
+        'help.collectionDuplicates': 'Detecta y fusiona libros duplicados automáticamente',
+        'help.collectionStats': 'Ver estadísticas: total de libros, valoraciones, autores principales',
+
+
         'scanDetail.title': 'Detalles del Escaneo',
         'scanDetail.booksFound': 'Libros Encontrados',
         'scanDetail.avgRating': 'Calificación Promedio',
@@ -1045,6 +1112,40 @@ const translations = {
         'help.needMoreHelp': 'Besoin de plus d\'aide ?',
         'help.contactUs': 'Contactez-nous',
 
+        // Export Scans
+        'help.exportTitle': '📤 Exporter les scans',
+        'help.exportDesc': 'Enregistrez et partagez vos résultats de scan en plusieurs formats.',
+        'help.exportSingleTitle': 'Exporter un scan',
+        'help.exportSingleDesc': 'Touchez un scan dans l\'Historique, puis utilisez les boutons d\'export pour enregistrer en CSV, HTML ou partager directement.',
+        'help.exportBulkTitle': 'Export en masse',
+        'help.exportBulkDesc': 'Touchez l\'icône d\'export dans l\'Historique pour sélectionner plusieurs scans et les exporter en une fois.',
+        'help.exportFormats': 'Formats : CSV (tableurs), HTML (imprimer ou PDF), TXT (texte brut)',
+
+// Edit & Add Books
+        'help.editBooksTitle': '✏️ Modifier et ajouter des livres',
+        'help.editBooksDesc': 'L\'IA n\'est pas parfaite — vous pouvez corriger les résultats à tout moment.',
+        'help.editBooksCorrect': 'Corriger un livre',
+        'help.editBooksCorrectDesc': 'Touchez un livre dans vos résultats, modifiez le titre ou l\'auteur et relancez la recherche.',
+        'help.editBooksAdd': 'Ajouter un livre manquant',
+        'help.editBooksAddDesc': 'Touchez « Ajouter un livre » pour saisir manuellement un titre non détecté.',
+        'help.editBooksRemove': 'Supprimer un livre',
+        'help.editBooksRemoveDesc': 'Balayez ou touchez le bouton supprimer pour retirer les entrées incorrectes.',
+        'help.editBooksBarcode': 'Scanner un code-barres',
+        'help.editBooksBarcodeDesc': 'Utilisez votre appareil photo pour scanner le code ISBN d\'un livre.',
+        'help.editBooksHint': 'Astuce : Touchez l\'icône crayon sur un scan pour passer en mode édition.',
+
+// Collection & Shelves
+        'help.collectionTitle': '📚 Collection et étagères',
+        'help.collectionDesc': 'Organisez tous vos livres scannés dans une bibliothèque personnelle.',
+        'help.collectionShelvesTitle': 'Étagères personnalisées',
+        'help.collectionShelvesDesc': 'Créez des étagères nommées (ex. « Favoris », « À lire ») et attribuez-y des livres.',
+        'help.collectionSearchTitle': 'Rechercher et filtrer',
+        'help.collectionSearchDesc': 'Trouvez des livres par titre ou auteur, filtrez par note ou affichez les livres non classés.',
+        'help.collectionImport': 'Importez vos livres scannés en un seul geste',
+        'help.collectionDuplicates': 'Détection et fusion automatique des doublons',
+        'help.collectionStats': 'Statistiques : total de livres, notes, auteurs principaux',
+
+
         'scanDetail.title': 'Détails du Scan',
         'scanDetail.booksFound': 'Livres Trouvés',
         'scanDetail.avgRating': 'Note Moyenne',
@@ -1412,6 +1513,40 @@ const translations = {
         'help.needMoreHelp': 'Brauchen Sie mehr Hilfe?',
         'help.contactUs': 'Kontaktieren Sie uns',
 
+        // Export Scans
+        'help.exportTitle': '📤 Scans exportieren',
+        'help.exportDesc': 'Speichere und teile deine Scan-Ergebnisse in verschiedenen Formaten.',
+        'help.exportSingleTitle': 'Einzelnen Scan exportieren',
+        'help.exportSingleDesc': 'Tippe auf einen Scan im Verlauf und nutze die Export-Buttons für CSV, HTML oder direktes Teilen.',
+        'help.exportBulkTitle': 'Massenexport',
+        'help.exportBulkDesc': 'Tippe auf das Export-Symbol im Verlauf, um mehrere Scans auszuwählen und auf einmal zu exportieren.',
+        'help.exportFormats': 'Formate: CSV (Tabellenkalkulation), HTML (Drucken oder als PDF), TXT (Klartext)',
+
+// Edit & Add Books
+        'help.editBooksTitle': '✏️ Bücher bearbeiten & hinzufügen',
+        'help.editBooksDesc': 'KI ist nicht perfekt — du kannst Scan-Ergebnisse jederzeit korrigieren.',
+        'help.editBooksCorrect': 'Buch korrigieren',
+        'help.editBooksCorrectDesc': 'Tippe auf ein Buch in den Ergebnissen, bearbeite Titel oder Autor und suche erneut.',
+        'help.editBooksAdd': 'Fehlendes Buch hinzufügen',
+        'help.editBooksAddDesc': 'Tippe auf „Buch hinzufügen", um einen nicht erkannten Titel manuell einzugeben.',
+        'help.editBooksRemove': 'Buch entfernen',
+        'help.editBooksRemoveDesc': 'Wische oder tippe auf Entfernen, um falsche Einträge zu löschen.',
+        'help.editBooksBarcode': 'Barcode scannen',
+        'help.editBooksBarcodeDesc': 'Nutze deine Kamera, um den ISBN-Barcode eines Buches zu scannen.',
+        'help.editBooksHint': 'Tipp: Tippe auf das Stift-Symbol bei einem Scan, um den Bearbeitungsmodus zu starten.',
+
+// Collection & Shelves
+        'help.collectionTitle': '📚 Sammlung & Regale',
+        'help.collectionDesc': 'Organisiere alle gescannten Bücher in einer persönlichen Bibliothek.',
+        'help.collectionShelvesTitle': 'Eigene Regale',
+        'help.collectionShelvesDesc': 'Erstelle benannte Regale (z.B. „Favoriten", „Zu lesen") und ordne Bücher zu.',
+        'help.collectionSearchTitle': 'Suchen & Filtern',
+        'help.collectionSearchDesc': 'Finde Bücher nach Titel oder Autor, filtere nach Bewertung oder zeige nicht zugeordnete Bücher.',
+        'help.collectionImport': 'Importiere Bücher aus deinem Scan-Verlauf mit einem Tipp',
+        'help.collectionDuplicates': 'Duplikate automatisch erkennen und zusammenführen',
+        'help.collectionStats': 'Sammlungsstatistiken: Gesamtzahl, Bewertungen, Top-Autoren',
+
+
         'scanDetail.title': 'Scan-Details',
         'scanDetail.booksFound': 'Bücher Gefunden',
         'scanDetail.avgRating': 'Durchschn. Bewertung',
@@ -1738,6 +1873,38 @@ const translations = {
         'help.troubleTooManyDesc': 'Attendi 3-5 minuti prima di riprovare',
         'help.needMoreHelp': 'Hai bisogno di ulteriore aiuto?',
         'help.contactUs': 'Contattaci',
+        // Export Scans
+        'help.exportTitle': '📤 Esporta scansioni',
+        'help.exportDesc': 'Salva e condividi i risultati delle scansioni in diversi formati.',
+        'help.exportSingleTitle': 'Esporta singola scansione',
+        'help.exportSingleDesc': 'Tocca una scansione nella Cronologia, poi usa i pulsanti di esportazione per salvare come CSV, HTML o condividere direttamente.',
+        'help.exportBulkTitle': 'Esportazione multipla',
+        'help.exportBulkDesc': 'Tocca l\'icona di esportazione nella Cronologia per selezionare più scansioni ed esportarle tutte insieme.',
+        'help.exportFormats': 'Formati: CSV (fogli di calcolo), HTML (stampa o salva come PDF), TXT (testo semplice)',
+
+// Edit & Add Books
+        'help.editBooksTitle': '✏️ Modifica e aggiungi libri',
+        'help.editBooksDesc': 'L\'IA non è perfetta — puoi correggere i risultati in qualsiasi momento.',
+        'help.editBooksCorrect': 'Correggi un libro',
+        'help.editBooksCorrectDesc': 'Tocca un libro nei risultati, modifica il titolo o l\'autore e cerca di nuovo.',
+        'help.editBooksAdd': 'Aggiungi un libro mancante',
+        'help.editBooksAddDesc': 'Tocca "Aggiungi un libro" per inserire manualmente un titolo non rilevato.',
+        'help.editBooksRemove': 'Rimuovi un libro',
+        'help.editBooksRemoveDesc': 'Scorri o tocca il pulsante rimuovi per eliminare voci errate.',
+        'help.editBooksBarcode': 'Scansiona codice a barre',
+        'help.editBooksBarcodeDesc': 'Usa la fotocamera per scansionare il codice ISBN di un libro.',
+        'help.editBooksHint': 'Suggerimento: Tocca l\'icona matita su una scansione per entrare in modalità modifica.',
+
+// Collection & Shelves
+        'help.collectionTitle': '📚 Collezione e scaffali',
+        'help.collectionDesc': 'Organizza tutti i tuoi libri scansionati in una libreria personale.',
+        'help.collectionShelvesTitle': 'Scaffali personalizzati',
+        'help.collectionShelvesDesc': 'Crea scaffali con nome (es. "Preferiti", "Da leggere") e assegna i libri.',
+        'help.collectionSearchTitle': 'Cerca e filtra',
+        'help.collectionSearchDesc': 'Trova libri per titolo o autore, filtra per valutazione o visualizza i libri non classificati.',
+        'help.collectionImport': 'Importa i libri dalla cronologia scansioni con un tocco',
+        'help.collectionDuplicates': 'Rileva e unisci automaticamente i libri duplicati',
+        'help.collectionStats': 'Statistiche: totale libri, valutazioni, autori principali',
         'scanDetail.title': 'Dettagli Scansione',
         'scanDetail.booksFound': 'Libri Trovati',
         'scanDetail.avgRating': 'Valutazione Media',
@@ -2063,7 +2230,41 @@ const translations = {
         'help.troubleTooManyDesc': 'Подождите 3-5 минут перед повторной попыткой',
         'help.needMoreHelp': 'Нужна дополнительная помощь?',
         'help.contactUs': 'Свяжитесь с нами',
-        canDetail: {
+        // Export Scans
+        'help.exportTitle': '📤 Экспорт сканов',
+        'help.exportDesc': 'Сохраняйте и делитесь результатами сканирования в разных форматах.',
+        'help.exportSingleTitle': 'Экспорт одного скана',
+        'help.exportSingleDesc': 'Нажмите на скан в Истории, затем используйте кнопки экспорта для сохранения в CSV, HTML или прямой отправки.',
+        'help.exportBulkTitle': 'Массовый экспорт',
+        'help.exportBulkDesc': 'Нажмите значок экспорта в Истории, чтобы выбрать несколько сканов и экспортировать их сразу.',
+        'help.exportFormats': 'Форматы: CSV (таблицы), HTML (печать или PDF), TXT (текст)',
+
+// Edit & Add Books
+        'help.editBooksTitle': '✏️ Редактирование и добавление книг',
+        'help.editBooksDesc': 'ИИ не идеален — вы можете исправить результаты сканирования в любое время.',
+        'help.editBooksCorrect': 'Исправить книгу',
+        'help.editBooksCorrectDesc': 'Нажмите на книгу в результатах, измените название или автора и найдите заново.',
+        'help.editBooksAdd': 'Добавить пропущенную книгу',
+        'help.editBooksAddDesc': 'Нажмите «Добавить книгу», чтобы вручную ввести название, которое ИИ пропустил.',
+        'help.editBooksRemove': 'Удалить книгу',
+        'help.editBooksRemoveDesc': 'Смахните или нажмите кнопку удаления, чтобы убрать неверные записи.',
+        'help.editBooksBarcode': 'Сканировать штрих-код',
+        'help.editBooksBarcodeDesc': 'Используйте камеру для сканирования ISBN штрих-кода книги.',
+        'help.editBooksHint': 'Совет: Нажмите значок карандаша на скане, чтобы войти в режим редактирования.',
+
+// Collection & Shelves
+        'help.collectionTitle': '📚 Коллекция и полки',
+        'help.collectionDesc': 'Организуйте все отсканированные книги в личную библиотеку.',
+        'help.collectionShelvesTitle': 'Пользовательские полки',
+        'help.collectionShelvesDesc': 'Создавайте именованные полки (напр. «Избранное», «К прочтению») и распределяйте книги.',
+        'help.collectionSearchTitle': 'Поиск и фильтры',
+        'help.collectionSearchDesc': 'Ищите книги по названию или автору, фильтруйте по рейтингу или просматривайте неклассифицированные книги.',
+        'help.collectionImport': 'Импортируйте книги из истории сканирования одним нажатием',
+        'help.collectionDuplicates': 'Автоматическое обнаружение и объединение дубликатов',
+        'help.collectionStats': 'Статистика коллекции: всего книг, рейтинги, топ авторов',
+
+
+        scanDetail: {
             title: 'Детали Сканирования',
             booksFound: 'Найдено Книг',
             avgRating: 'Средний Рейтинг',
@@ -2391,6 +2592,38 @@ const translations = {
         'help.troubleTooManyDesc': '等待3-5分钟后重试',
         'help.needMoreHelp': '需要更多帮助？',
         'help.contactUs': '联系我们',
+        // Export Scans
+        'help.exportTitle': '📤 导出扫描',
+        'help.exportDesc': '以多种格式保存和分享您的扫描结果。',
+        'help.exportSingleTitle': '导出单次扫描',
+        'help.exportSingleDesc': '在历史记录中点击任意扫描，然后使用导出按钮保存为CSV、HTML或直接分享。',
+        'help.exportBulkTitle': '批量导出',
+        'help.exportBulkDesc': '点击历史记录中的导出图标，选择多个扫描一次性导出。',
+        'help.exportFormats': '格式：CSV（电子表格）、HTML（打印或保存为PDF）、TXT（纯文本）',
+
+// Edit & Add Books
+        'help.editBooksTitle': '✏️ 编辑和添加书籍',
+        'help.editBooksDesc': 'AI并非完美——您可以随时修正扫描结果。',
+        'help.editBooksCorrect': '修正书籍',
+        'help.editBooksCorrectDesc': '点击结果中的书籍，编辑标题或作者，然后重新查找。',
+        'help.editBooksAdd': '添加遗漏的书籍',
+        'help.editBooksAddDesc': '点击"添加书籍"手动输入AI未识别的书名。',
+        'help.editBooksRemove': '删除书籍',
+        'help.editBooksRemoveDesc': '滑动或点击删除按钮移除错误条目。',
+        'help.editBooksBarcode': '扫描条形码',
+        'help.editBooksBarcodeDesc': '使用相机扫描书籍的ISBN条形码进行快速查找。',
+        'help.editBooksHint': '提示：点击扫描上的铅笔图标进入编辑模式。',
+
+// Collection & Shelves
+        'help.collectionTitle': '📚 收藏与书架',
+        'help.collectionDesc': '将所有扫描的书籍整理到个人图书馆中。',
+        'help.collectionShelvesTitle': '自定义书架',
+        'help.collectionShelvesDesc': '创建命名书架（如"收藏夹"、"待读"）并分配书籍。',
+        'help.collectionSearchTitle': '搜索与筛选',
+        'help.collectionSearchDesc': '按书名或作者搜索，按评分筛选，或查看未分类书籍。',
+        'help.collectionImport': '一键从扫描历史导入书籍',
+        'help.collectionDuplicates': '自动检测并合并重复书籍',
+        'help.collectionStats': '查看收藏统计：总书数、评分、热门作者',
         'scanDetail.title': '扫描详情',
         'scanDetail.booksFound': '找到的书籍',
         'scanDetail.avgRating': '平均评分',

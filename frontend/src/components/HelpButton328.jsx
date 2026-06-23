@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { HelpCircle, X, Camera, BookOpen, History, User, Download, Pencil, Library } from 'lucide-react';
+import { HelpCircle, X, Camera, BookOpen, History, User } from 'lucide-react';
 import { Capacitor } from "@capacitor/core";
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import i18n from '../utils/i18n';
 
 const HelpButton = () => {
@@ -9,13 +10,27 @@ const HelpButton = () => {
     const isAndroid = platform === 'android';
     const isIOS = platform === 'ios';
 
+    const handleOpen = async () => {
+        if (Capacitor.isNativePlatform()) {
+            await Haptics.impact({ style: ImpactStyle.Light });
+        }
+        setShowHelp(true);
+    };
+
+    const handleClose = async () => {
+        if (Capacitor.isNativePlatform()) {
+            await Haptics.impact({ style: ImpactStyle.Light });
+        }
+        setShowHelp(false);
+    };
+
     return (
         <>
             {/* Help Button - Fixed Position */}
             <button
-                onClick={() => setShowHelp(true)}
-                className="fixed bottom-24 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition-all hover:scale-110 z-40 flex items-center justify-center"
-                aria-label="Help"
+                onClick={handleOpen}
+                className="fixed bottom-24 right-6 w-14 h-14 bg-indigo-600 dark:bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all hover:scale-110 active:scale-95 z-40 flex items-center justify-center"
+                aria-label={i18n.t('help.title')}
             >
                 <HelpCircle className="w-6 h-6" />
             </button>
@@ -25,28 +40,25 @@ const HelpButton = () => {
                 <>
                     {/* Backdrop */}
                     <div
-                        className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50"
-                        onClick={() => setShowHelp(false)}
+                        className="fixed inset-0 bg-black bg-opacity-50 z-50"
+                        onClick={handleClose}
                     />
 
                     {/* Slide-in Panel */}
-                    <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl z-50 overflow-y-auto"
-                         style={{ WebkitOverflowScrolling: 'touch' }}>
+                    <div className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl z-50 overflow-y-auto animate-slide-in-right">
                         {/* Header - Sticky with safe area */}
-                        <div className="sticky top-0 bg-gradient-to-br from-indigo-600 to-indigo-700 text-white shadow-md z-10"
-                             style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))', paddingBottom: '1.5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}>
+                        <div
+                            className="sticky top-0 bg-gradient-to-br from-indigo-600 to-indigo-700 dark:from-indigo-700 dark:to-indigo-800 text-white shadow-md z-10"
+                            style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))', paddingBottom: '1.5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem' }}
+                        >
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <h2 className="text-2xl font-bold mb-1">
-                                        {i18n.t('help.title')}
-                                    </h2>
-                                    <p className="text-indigo-100 text-sm">
-                                        {i18n.t('help.subtitle')}
-                                    </p>
+                                    <h2 className="text-2xl font-bold mb-1">{i18n.t('help.title')}</h2>
+                                    <p className="text-indigo-100 text-sm">{i18n.t('help.subtitle')}</p>
                                 </div>
                                 <button
-                                    onClick={() => setShowHelp(false)}
-                                    className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                                    onClick={handleClose}
+                                    className="text-white hover:text-indigo-100 transition-colors active:scale-95"
                                 >
                                     <X className="w-6 h-6" />
                                 </button>
@@ -54,28 +66,27 @@ const HelpButton = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="p-6 space-y-6"
-                             style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
-
-                            {/* How It Works */}
+                        <div className="p-6 space-y-6" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 1.5rem)' }}>
+                            {/* Quick Start */}
                             <section>
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center gap-2">
+                                    <Camera className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                                     {i18n.t('help.quickStart')}
                                 </h3>
                                 <div className="space-y-3">
-                                    <div className="bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-600 dark:border-blue-400 p-4 rounded">
-                                        <p className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                                    <div className="bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-600 dark:border-indigo-400 p-4 rounded">
+                                        <p className="font-semibold text-indigo-900 dark:text-indigo-100 mb-2">
                                             {i18n.t('help.step1Title')}
                                         </p>
-                                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                                        <p className="text-sm text-indigo-800 dark:text-indigo-200">
                                             {i18n.t('help.step1Desc')}
                                         </p>
                                     </div>
-                                    <div className="bg-purple-50 dark:bg-purple-900/30 border-l-4 border-purple-600 dark:border-purple-400 p-4 rounded">
-                                        <p className="font-semibold text-purple-900 dark:text-purple-100 mb-2">
+                                    <div className="bg-indigo-50 dark:bg-indigo-900/30 border-l-4 border-indigo-600 dark:border-indigo-400 p-4 rounded">
+                                        <p className="font-semibold text-indigo-900 dark:text-indigo-100 mb-2">
                                             {i18n.t('help.step2Title')}
                                         </p>
-                                        <p className="text-sm text-purple-800 dark:text-purple-200">
+                                        <p className="text-sm text-indigo-800 dark:text-indigo-200">
                                             {i18n.t('help.step2Desc')}
                                         </p>
                                     </div>
@@ -108,7 +119,7 @@ const HelpButton = () => {
                                 </div>
                             </section>
 
-                            {/* Optional Features (account) */}
+                            {/* Features */}
                             <section>
                                 <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">
                                     {i18n.t('help.optionalFeatures')}
@@ -155,107 +166,6 @@ const HelpButton = () => {
                                             </p>
                                         </div>
                                     </div>
-                                </div>
-                            </section>
-
-                            {/* ===== NEW: Export Scans ===== */}
-                            <section>
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">
-                                    {i18n.t('help.exportTitle')}
-                                </h3>
-                                <div className="bg-sky-50 dark:bg-sky-900/30 border border-sky-200 dark:border-sky-700 rounded-lg p-4">
-                                    <p className="text-sm text-sky-800 dark:text-sky-200 mb-3">
-                                        {i18n.t('help.exportDesc')}
-                                    </p>
-                                    <div className="space-y-2">
-                                        <div className="flex items-start gap-3 p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                                            <Download className="w-4 h-4 text-sky-600 dark:text-sky-400 flex-shrink-0 mt-0.5" />
-                                            <div>
-                                                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
-                                                    {i18n.t('help.exportSingleTitle')}
-                                                </p>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                    {i18n.t('help.exportSingleDesc')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-3 p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                                            <Download className="w-4 h-4 text-sky-600 dark:text-sky-400 flex-shrink-0 mt-0.5" />
-                                            <div>
-                                                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
-                                                    {i18n.t('help.exportBulkTitle')}
-                                                </p>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                    {i18n.t('help.exportBulkDesc')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p className="text-xs text-sky-700 dark:text-sky-300 mt-3 italic">
-                                        {i18n.t('help.exportFormats')}
-                                    </p>
-                                </div>
-                            </section>
-
-                            {/* ===== NEW: Edit & Add Books ===== */}
-                            <section>
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">
-                                    {i18n.t('help.editBooksTitle')}
-                                </h3>
-                                <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
-                                    <p className="text-sm text-amber-800 dark:text-amber-200 mb-3">
-                                        {i18n.t('help.editBooksDesc')}
-                                    </p>
-                                    <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-2 ml-4">
-                                        <li>• <strong>{i18n.t('help.editBooksCorrect')}</strong> — {i18n.t('help.editBooksCorrectDesc')}</li>
-                                        <li>• <strong>{i18n.t('help.editBooksAdd')}</strong> — {i18n.t('help.editBooksAddDesc')}</li>
-                                        <li>• <strong>{i18n.t('help.editBooksRemove')}</strong> — {i18n.t('help.editBooksRemoveDesc')}</li>
-                                        <li>• <strong>{i18n.t('help.editBooksBarcode')}</strong> — {i18n.t('help.editBooksBarcodeDesc')}</li>
-                                    </ul>
-                                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-3 italic">
-                                        {i18n.t('help.editBooksHint')}
-                                    </p>
-                                </div>
-                            </section>
-
-                            {/* ===== NEW: Collection & Shelves ===== */}
-                            <section>
-                                <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-3">
-                                    {i18n.t('help.collectionTitle')}
-                                </h3>
-                                <div className="bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-700 rounded-lg p-4">
-                                    <p className="text-sm text-violet-800 dark:text-violet-200 mb-3">
-                                        {i18n.t('help.collectionDesc')}
-                                    </p>
-                                    <div className="space-y-2">
-                                        <div className="flex items-start gap-3 p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                                            <Library className="w-4 h-4 text-violet-600 dark:text-violet-400 flex-shrink-0 mt-0.5" />
-                                            <div>
-                                                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
-                                                    {i18n.t('help.collectionShelvesTitle')}
-                                                </p>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                    {i18n.t('help.collectionShelvesDesc')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-3 p-2 bg-white/60 dark:bg-gray-800/60 rounded-lg">
-                                            <Pencil className="w-4 h-4 text-violet-600 dark:text-violet-400 flex-shrink-0 mt-0.5" />
-                                            <div>
-                                                <p className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
-                                                    {i18n.t('help.collectionSearchTitle')}
-                                                </p>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                    {i18n.t('help.collectionSearchDesc')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <ul className="text-sm text-violet-700 dark:text-violet-300 space-y-1 ml-4 mt-3">
-                                        <li>• {i18n.t('help.collectionImport')}</li>
-                                        <li>• {i18n.t('help.collectionDuplicates')}</li>
-                                        <li>• {i18n.t('help.collectionStats')}</li>
-                                    </ul>
                                 </div>
                             </section>
 

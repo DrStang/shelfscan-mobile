@@ -304,12 +304,17 @@ async function searchOpenLibrary(title, author) {
 async function searchGoogleBooks(title, author) {
   try {
     const query = encodeURIComponent(`${title} ${author}`);
+    const keyParam = process.env.GOOGLE_BOOKS_API_KEY
+        ? `&key=${process.env.GOOGLE_BOOKS_API_KEY}`
+        : '';
     const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`
+        `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1&country=US${keyParam}`
     );
 
-    if (!response.ok) return null;
-
+    if (!response.ok) {
+      console.error(`Google Books ${response.status} for "${title}": rate-limited or quota exhausted`);
+      return null;
+    }
     const data = await response.json();
 
     if (data.items && data.items.length > 0) {
@@ -533,17 +538,20 @@ function mergeBookData(googleBook, openLibBook, goodreadsRating, originalTitle, 
 
     // Use direct product link if we have ISBN-10, otherwise use search
     if (amazonIsbn.length === 10) {
-      amazonUrl = `https://www.amazon.com/dp/${amazonIsbn}?tag=${AMAZON_AFFILIATE_TAG}`;
+      //amazonUrl = `https://www.amazon.com/dp/${amazonIsbn}?tag=${AMAZON_AFFILIATE_TAG}`;
+      amazonUrl = `https://www.amazon.com/dp/${amazonIsbn}`;
     } else {
       // ISBN-13 or unexpected format - use search with ISBN
       const searchQuery = encodeURIComponent(`${originalTitle} ${originalAuthor} ISBN ${cleanIsbn}`);
-      amazonUrl = `https://www.amazon.com/s?k=${searchQuery}&tag=${AMAZON_AFFILIATE_TAG}`;
+      amazonUrl = `https://www.amazon.com/s?k=${searchQuery}`;
       console.log(`Using search URL for ISBN: ${cleanIsbn}`);
     }
   } else {
     // No ISBN available, create a search link
     const searchQuery = encodeURIComponent(`${originalTitle} ${originalAuthor}`);
-    amazonUrl = `https://www.amazon.com/s?k=${searchQuery}&tag=${AMAZON_AFFILIATE_TAG}`;
+    //amazonUrl = `https://www.amazon.com/s?k=${searchQuery}&tag=${AMAZON_AFFILIATE_TAG}`;
+    amazonUrl = `https://www.amazon.com/s?k=${searchQuery}`;
+
     console.log(`No ISBN - using title/author search for: ${originalTitle}`);
   }
   console.log(`📚 ${originalTitle}: Amazon URL = ${amazonUrl}`);
@@ -1213,8 +1221,12 @@ app.post('/api/scan-isbn', async (req, res) => {
 // Helper function to search Google Books by ISBN
 async function searchGoogleBooksByISBN(isbn) {
   try {
+
+    const keyParam = process.env.GOOGLE_BOOKS_API_KEY
+        ? `&key=${process.env.GOOGLE_BOOKS_API_KEY}`
+        : '';
     const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`
+        `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&country=US${keyParam}`
     );
 
     if (!response.ok) return null;

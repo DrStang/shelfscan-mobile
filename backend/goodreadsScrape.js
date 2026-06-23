@@ -1,5 +1,6 @@
 const { fetch } = require ('undici');
 const cheerio = require ('cheerio');
+const { decode } = require ('html-entities');
 
 async function getGoodreads(isbn, name, author){
     let url
@@ -30,13 +31,13 @@ async function getGoodreads(isbn, name, author){
         const raw = JSON.parse(script);
         const rating = raw.aggregateRating;
         const desc = $('[data-testid="description"]');
-
+        let author = raw.author?.[0]?.name;
 
 
         return {
-            name: raw.name,
+            name: decode(raw.name),
             isbn: raw.isbn,
-            author: raw.author?.[0]?.name,
+            author: decode(author),
             image: raw.image,
             average_rating: rating?.ratingValue != null ? Number(rating.ratingValue) : null,
             ratings_count: rating?.ratingCount != null ? Number(rating.ratingCount) : null,
